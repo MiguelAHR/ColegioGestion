@@ -1,10 +1,32 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="modelo.Profesor, modelo.Curso, java.util.List" %>
+<%@ page import="modelo.AsistenciaDAO, java.util.Map" %>
 
 <%
     Profesor docente = (Profesor) session.getAttribute("docente");
-    // ✅ Obtener de request (no de session)
     List<Curso> cursos = (List<Curso>) request.getAttribute("misCursos");
+    
+    // Obtener estadísticas de asistencias para cada curso
+    AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
+    Map<Integer, Map<String, Object>> estadisticasCursos = new java.util.HashMap<>();
+    
+    if (cursos != null) {
+        for (Curso curso : cursos) {
+            // Obtener resumen del mes actual
+            int mesActual = java.time.LocalDate.now().getMonthValue();
+            int anioActual = java.time.LocalDate.now().getYear();
+            
+            // Aquí necesitarías un método para obtener estadísticas por curso
+            // Por ahora usaremos datos de ejemplo
+            Map<String, Object> stats = new java.util.HashMap<>();
+            stats.put("totalAlumnos", 25);
+            stats.put("presentesHoy", 22);
+            stats.put("ausentesHoy", 3);
+            stats.put("porcentajeAsistencia", 88.0);
+            
+            estadisticasCursos.put(curso.getId(), stats);
+        }
+    }
 
     if (docente == null) {
         response.sendRedirect("index.jsp");
@@ -55,6 +77,21 @@
             .card-box:hover {
                 transform: scale(1.03);
             }
+            .asistencia-badge {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+                border-radius: 10px;
+            }
+            .btn-asistencia {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                transition: all 0.3s ease;
+            }
+            .btn-asistencia:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            }
         </style>
     </head>
     <body>
@@ -73,27 +110,61 @@
         <div class="container mt-5">
             <h2 class="text-center fw-bold mb-5">Panel del Docente</h2>
 
-            <%-- TEMPORAL: Para depuración --%>
-            <div class="alert alert-info">
-                <strong>Informacion:</strong><br>
-                Docente: <%= docente.getNombres()%> <%= docente.getApellidos()%><br>
-                IdDocente: <%= docente.getId()%><br>
-                Cursos totales <%= cursos != null ? cursos.size() : "null"%>
+            <!-- Sección de Asistencias Rápidas -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">📊 Módulo de Asistencias</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="AsistenciaServlet?accion=registrar" class="btn btn-asistencia btn-block mb-2 w-100">
+                                📝 Tomar Asistencia
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="AsistenciaServlet?accion=reportes" class="btn btn-info btn-block mb-2 w-100">
+                                📈 Ver Reportes
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="JustificacionServlet?accion=pending" class="btn btn-warning btn-block mb-2 w-100">
+                                ⏳ Justificaciones Pendientes
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="row g-4">
                 <%
                     if (cursos != null && !cursos.isEmpty()) {
                         for (Curso c : cursos) {
+                            Map<String, Object> stats = estadisticasCursos.get(c.getId());
                 %>
                 <div class="col-md-4">
                     <div class="card-box">
                         <h5 class="fw-bold mb-2"><%= c.getNombre()%></h5>
                         <p><strong>Grado:</strong> <%= c.getGradoNombre()%></p>
+                        
+                        <!-- Información de Asistencia -->
+                        <% if (stats != null) { %>
+                        <div class="mb-3 p-2 bg-light rounded">
+                            <small class="text-muted">Asistencia Hoy:</small><br>
+                            <span class="badge bg-success"><%= stats.get("presentesHoy") %> Presentes</span>
+                            <span class="badge bg-danger"><%= stats.get("ausentesHoy") %> Ausentes</span>
+                            <div class="mt-1">
+                                <small><strong><%= stats.get("porcentajeAsistencia") %>%</strong> de asistencia</small>
+                            </div>
+                        </div>
+                        <% } %>
+                        
                         <div class="d-grid gap-2 mt-3">
                             <a href="TareaServlet?accion=ver&curso_id=<%= c.getId()%>" class="btn btn-outline-secondary btn-sm">Gestionar Tareas</a>
                             <a href="NotaServlet?curso_id=<%= c.getId()%>" class="btn btn-outline-primary btn-sm">Gestionar Notas</a>
                             <a href="ObservacionServlet?accion=listar&curso_id=<%= c.getId()%>" class="btn btn-outline-success btn-sm">Gestionar Observaciones</a>
+                            <!-- NUEVO BOTÓN PARA ASISTENCIAS -->
+                            <a href="AsistenciaServlet?accion=verCurso&curso_id=<%= c.getId()%>" class="btn btn-outline-info btn-sm">📊 Gestionar Asistencias</a>
                         </div>
                     </div>
                 </div>

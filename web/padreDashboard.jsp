@@ -1,12 +1,7 @@
-<%-- 
-    Document   : padreDashboard
-    Created on : 31 may. 2025, 10:41:51 a. m.
-    Author     : Juan Pablo Amaya
---%>
-
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="modelo.Padre" %>
 <%@ page import="modelo.ImageDAO, modelo.Imagen" %>
+<%@ page import="modelo.AsistenciaDAO, java.util.Map" %>
 <%@ page import="java.util.List" %>
 
 <%
@@ -16,8 +11,34 @@
         return;
     }
     int alumnoId = padre.getAlumnoId();
+    
+    // Obtener resumen de asistencias del mes actual
+    AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
+    int mesActual = java.time.LocalDate.now().getMonthValue();
+    int anioActual = java.time.LocalDate.now().getYear();
+    
+    // Obtener resumen de asistencias (usaremos turno 1 por defecto)
+    Map<String, Object> resumenAsistencia = asistenciaDAO.obtenerResumenAsistenciaAlumnoTurno(alumnoId, 1, mesActual, anioActual);
+    
     // Cargar imágenes ya subidas de este alumno
     List<Imagen> imgs = new ImageDAO().listarPorAlumno(alumnoId);
+    
+    // Calcular porcentaje de asistencia
+    double porcentajeAsistencia = 0.0;
+    if (resumenAsistencia != null && !resumenAsistencia.isEmpty()) {
+        Object porcentajeObj = resumenAsistencia.get("porcentajeAsistencia");
+        if (porcentajeObj != null) {
+            porcentajeAsistencia = (Double) porcentajeObj;
+        }
+    }
+    
+    // Determinar color del badge según el porcentaje
+    String badgeClass = "bg-success";
+    if (porcentajeAsistencia < 75) {
+        badgeClass = "bg-danger";
+    } else if (porcentajeAsistencia < 90) {
+        badgeClass = "bg-warning";
+    }
 %>
 
 <!DOCTYPE html>
@@ -66,6 +87,15 @@
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             }
+            .asistencia-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+            }
+            .progress {
+                height: 10px;
+                margin: 10px 0;
+            }
         </style>
     </head>
     <body>
@@ -83,6 +113,45 @@
 
         <div class="container mt-5">
             <h2 class="text-center fw-bold mb-4">Panel del Padre de Familia</h2>
+            
+            <!-- Tarjeta de Resumen de Asistencia -->
+            <div class="card asistencia-card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="card-title">🎒 Asistencia Escolar</h5>
+                            <p class="card-text mb-1">
+                                <strong>Asistencia Mensual:</strong> 
+                                <span class="badge <%= badgeClass %> fs-6"><%= String.format("%.1f", porcentajeAsistencia) %>%</span>
+                            </p>
+                            <% if (resumenAsistencia != null && !resumenAsistencia.isEmpty()) { %>
+                            <div class="row mt-2">
+                                <div class="col-3">
+                                    <small>✅ <strong><%= resumenAsistencia.get("presentes") %></strong> Presentes</small>
+                                </div>
+                                <div class="col-3">
+                                    <small>⏰ <strong><%= resumenAsistencia.get("tardanzas") %></strong> Tardanzas</small>
+                                </div>
+                                <div class="col-3">
+                                    <small>❌ <strong><%= resumenAsistencia.get("ausentes") %></strong> Ausentes</small>
+                                </div>
+                                <div class="col-3">
+                                    <small>📄 <strong><%= resumenAsistencia.get("justificados") %></strong> Justificados</small>
+                                </div>
+                            </div>
+                            <% } %>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="AsistenciaServlet?accion=verPadre&alumno_id=<%= alumnoId%>" class="btn btn-light btn-sm me-2">
+                                📊 Ver Detalles
+                            </a>
+                            <a href="JustificacionServlet?accion=form&alumno_id=<%= alumnoId%>" class="btn btn-warning btn-sm">
+                                📝 Justificar Ausencia
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="row g-4 justify-content-center">
 
@@ -122,6 +191,15 @@
                     </div>
                 </div>
 
+                <!-- NUEVA TARJETA: Asistencias Detalladas -->
+                <div class="col-md-4">
+                    <div class="card-box">
+                        <h5 class="fw-bold mb-2">Asistencias</h5>
+                        <p>Consulta el historial completo de asistencias.</p>
+                        <a href="asistenciasPadre.jsp?alumno_id=<%= alumnoId%>" class="btn btn-outline-secondary btn-sm">Ver Asistencias</a>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -155,6 +233,3 @@
         </footer>
     </body>
 </html>
-
-
-
