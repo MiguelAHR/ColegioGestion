@@ -1,4 +1,4 @@
-
+<?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="3.1">
 
     <servlet>
@@ -11,9 +11,28 @@
         <url-pattern>/LoginServlet</url-pattern>
     </servlet-mapping>
 
-    <welcome-file-list>
-        <welcome-file>index.jsp</welcome-file>
-    </welcome-file-list>
+    <!-- SERVLETS DE JUSTIFICACIONES Y ASISTENCIAS -->
+    <servlet>
+        <servlet-name>JustificacionServlet</servlet-name>
+        <servlet-class>controlador.JustificacionServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>JustificacionServlet</servlet-name>
+        <url-pattern>/JustificacionServlet</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AsistenciaServlet</servlet-name>
+        <servlet-class>controlador.AsistenciaServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>AsistenciaServlet</servlet-name>
+        <url-pattern>/AsistenciaServlet</url-pattern>
+    </servlet-mapping>
+
+    <!-- SERVLETS EXISTENTES -->
     <servlet>
         <servlet-name>AlumnoServlet</servlet-name>
         <servlet-class>controlador.AlumnoServlet</servlet-class>
@@ -74,6 +93,8 @@
         <url-pattern>/TareasPadreServlet</url-pattern>
     </servlet-mapping>
 
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
 
 </web-app>
-

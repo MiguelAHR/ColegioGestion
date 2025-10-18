@@ -2,8 +2,12 @@
 <%@ page import="modelo.Justificacion, java.util.List" %>
 <%
     List<Justificacion> justificaciones = (List<Justificacion>) request.getAttribute("justificaciones");
-    String mensaje = (String) request.getAttribute("mensaje");
-    String error = (String) request.getAttribute("error");
+    String mensaje = (String) request.getParameter("mensaje");
+    String error = (String) request.getParameter("error");
+    
+    if (justificaciones == null) {
+        justificaciones = new java.util.ArrayList<>();
+    }
 %>
 <!DOCTYPE html>
 <html>
@@ -17,40 +21,42 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Justificaciones Pendientes</h2>
-            <a href="docenteDashboard.jsp" class="btn btn-secondary">← Volver al Dashboard</a>
+            <h2><i class="bi bi-clock-history"></i> Justificaciones Pendientes</h2>
+            <a href="docenteDashboard.jsp" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+            </a>
         </div>
 
         <% if (mensaje != null) { %>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <%= mensaje %>
+                <i class="bi bi-check-circle"></i> <%= mensaje %>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <% } %>
         
         <% if (error != null) { %>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <%= error %>
+                <i class="bi bi-exclamation-triangle"></i> <%= error %>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <% } %>
 
         <div class="card">
-            <div class="card-header bg-warning text-dark">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="bi bi-clock-history"></i> Justificaciones por Revisar
-                    <span class="badge bg-danger ms-2"><%= justificaciones != null ? justificaciones.size() : 0 %></span>
                 </h5>
+                <span class="badge bg-danger"><%= justificaciones.size() %> pendientes</span>
             </div>
             <div class="card-body">
-                <% if (justificaciones != null && !justificaciones.isEmpty()) { %>
+                <% if (!justificaciones.isEmpty()) { %>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead class="table-dark">
                                 <tr>
                                     <th>Alumno</th>
                                     <th>Curso</th>
-                                    <th>Fecha</th>
+                                    <th>Fecha Ausencia</th>
                                     <th>Tipo</th>
                                     <th>Descripción</th>
                                     <th>Enviado por</th>
@@ -60,26 +66,52 @@
                             <tbody>
                                 <% for (Justificacion j : justificaciones) { %>
                                 <tr>
-                                    <td><%= j.getAlumnoNombre() %></td>
-                                    <td><%= j.getCursoNombre() %></td>
+                                    <td><%= j.getAlumnoNombre() != null ? j.getAlumnoNombre() : "N/A" %></td>
+                                    <td><%= j.getCursoNombre() != null ? j.getCursoNombre() : "N/A" %></td>
                                     <td>
                                         <small>
-                                            <%= j.getFecha() %><br>
-                                            <%= j.getHoraClase() %>
+                                            <strong><%= j.getFecha() != null ? j.getFecha() : "N/A" %></strong><br>
+                                            <%= j.getHoraClase() != null ? j.getHoraClase() : "" %>
                                         </small>
                                     </td>
                                     <td>
                                         <span class="badge bg-info"><%= j.getTipoJustificacion() %></span>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="popover" 
-                                                data-bs-title="Descripción Completa"
-                                                data-bs-content="<%= j.getDescripcion() %>">
-                                            Ver
-                                        </button>
+                                        <% if (j.getDescripcion() != null && !j.getDescripcion().isEmpty()) { %>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#descModal<%= j.getId() %>">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </button>
+                                            
+                                            <!-- Modal para descripción -->
+                                            <div class="modal fade" id="descModal<%= j.getId() %>" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Descripción de la Justificación</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p><%= j.getDescripcion() %></p>
+                                                            <% if (j.getDocumentoAdjunto() != null && !j.getDocumentoAdjunto().isEmpty()) { %>
+                                                                <div class="mt-3">
+                                                                    <strong>Documento adjunto:</strong> 
+                                                                    <a href="<%= j.getDocumentoAdjunto() %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                                        <i class="bi bi-download"></i> Descargar
+                                                                    </a>
+                                                                </div>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% } else { %>
+                                            <span class="text-muted">Sin descripción</span>
+                                        <% } %>
                                     </td>
-                                    <td><%= j.getPadreNombre() %></td>
+                                    <td><%= j.getPadreNombre() != null ? j.getPadreNombre() : "N/A" %></td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <form method="post" action="JustificacionServlet" class="d-inline">
@@ -116,6 +148,7 @@
                                                                 <textarea class="form-control" id="observaciones<%= j.getId() %>" 
                                                                           name="observaciones" rows="3" required
                                                                           placeholder="Explique por qué rechaza esta justificación..."></textarea>
+                                                                <div class="form-text">Esta observación será visible para el padre de familia.</div>
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer">
@@ -146,12 +179,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Inicializar popovers
-        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-        var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-            return new bootstrap.Popover(popoverTriggerEl);
-        });
-    </script>
 </body>
 </html>

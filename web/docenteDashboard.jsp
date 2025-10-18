@@ -1,23 +1,30 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="modelo.Profesor, modelo.Curso, java.util.List" %>
 <%@ page import="modelo.AsistenciaDAO, java.util.Map" %>
-
 <%
     Profesor docente = (Profesor) session.getAttribute("docente");
     List<Curso> cursos = (List<Curso>) request.getAttribute("misCursos");
+    
+    // Verificar si el docente está en sesión
+    if (docente == null) {
+        response.sendRedirect("index.jsp");
+        return;
+    }
+    
+    // Si no hay cursos cargados, redirigir al servlet para cargarlos
+    if (cursos == null) {
+        response.sendRedirect("DocenteDashboardServlet");
+        return;
+    }
     
     // Obtener estadísticas de asistencias para cada curso
     AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
     Map<Integer, Map<String, Object>> estadisticasCursos = new java.util.HashMap<>();
     
-    if (cursos != null) {
+    if (cursos != null && !cursos.isEmpty()) {
         for (Curso curso : cursos) {
-            // Obtener resumen del mes actual
-            int mesActual = java.time.LocalDate.now().getMonthValue();
-            int anioActual = java.time.LocalDate.now().getYear();
-            
-            // Aquí necesitarías un método para obtener estadísticas por curso
             // Por ahora usaremos datos de ejemplo
+            // En una implementación real, aquí llamarías a un método del DAO
             Map<String, Object> stats = new java.util.HashMap<>();
             stats.put("totalAlumnos", 25);
             stats.put("presentesHoy", 22);
@@ -27,11 +34,6 @@
             estadisticasCursos.put(curso.getId(), stats);
         }
     }
-
-    if (docente == null) {
-        response.sendRedirect("index.jsp");
-        return;
-    }
 %>
 
 <!DOCTYPE html>
@@ -40,6 +42,7 @@
         <meta charset="UTF-8">
         <title>Panel del Docente</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
         <link rel="stylesheet" href="assets/css/estilos.css">
 
         <style>
@@ -73,9 +76,11 @@
                 text-align: center;
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
                 transition: transform 0.2s;
+                border: 1px solid #e9ecef;
             }
             .card-box:hover {
                 transform: scale(1.03);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.15);
             }
             .asistencia-badge {
                 font-size: 0.8rem;
@@ -92,6 +97,11 @@
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
             }
+            .stats-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+            }
         </style>
     </head>
     <body>
@@ -102,34 +112,38 @@
                 <span class="fw-bold fs-6">Colegio SA</span>
             </div>
             <div>
-                <span><%= docente.getNombres()%> <%= docente.getApellidos()%></span>
-                <a href="LogoutServlet" class="btn btn-outline-light btn-sm ms-3">Cerrar sesión</a>
+                <span><i class="bi bi-person-circle"></i> <%= docente.getNombres()%> <%= docente.getApellidos()%></span>
+                <a href="LogoutServlet" class="btn btn-outline-light btn-sm ms-3">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                </a>
             </div>
         </div>
 
         <div class="container mt-5">
-            <h2 class="text-center fw-bold mb-5">Panel del Docente</h2>
+            <h2 class="text-center fw-bold mb-5">
+                <i class="bi bi-speedometer2"></i> Panel del Docente
+            </h2>
 
             <!-- Sección de Asistencias Rápidas -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">📊 Módulo de Asistencias</h5>
-                </div>
+            <div class="card mb-4 stats-card">
                 <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-clipboard-check"></i> Módulo de Asistencias
+                    </h5>
                     <div class="row">
                         <div class="col-md-4">
-                            <a href="AsistenciaServlet?accion=registrar" class="btn btn-asistencia btn-block mb-2 w-100">
-                                📝 Tomar Asistencia
+                            <a href="AsistenciaServlet?accion=registrar" class="btn btn-light btn-block mb-2 w-100">
+                                <i class="bi bi-plus-circle"></i> Tomar Asistencia
                             </a>
                         </div>
                         <div class="col-md-4">
-                            <a href="AsistenciaServlet?accion=reportes" class="btn btn-info btn-block mb-2 w-100">
-                                📈 Ver Reportes
+                            <a href="AsistenciaServlet?accion=reportes" class="btn btn-info btn-block mb-2 w-100 text-white">
+                                <i class="bi bi-graph-up"></i> Ver Reportes
                             </a>
                         </div>
                         <div class="col-md-4">
                             <a href="JustificacionServlet?accion=pending" class="btn btn-warning btn-block mb-2 w-100">
-                                ⏳ Justificaciones Pendientes
+                                <i class="bi bi-clock-history"></i> Justificaciones Pendientes
                             </a>
                         </div>
                     </div>
@@ -144,27 +158,51 @@
                 %>
                 <div class="col-md-4">
                     <div class="card-box">
-                        <h5 class="fw-bold mb-2"><%= c.getNombre()%></h5>
-                        <p><strong>Grado:</strong> <%= c.getGradoNombre()%></p>
+                        <h5 class="fw-bold mb-2 text-primary">
+                            <i class="bi bi-book"></i> <%= c.getNombre()%>
+                        </h5>
+                        <p class="mb-2">
+                            <strong>Grado:</strong> <%= c.getGradoNombre()%>
+                        </p>
+                        <p class="mb-3 text-muted small">
+                            <strong>Profesor:</strong> <%= c.getProfesorNombre() != null ? c.getProfesorNombre() : "No asignado" %>
+                        </p>
                         
                         <!-- Información de Asistencia -->
                         <% if (stats != null) { %>
-                        <div class="mb-3 p-2 bg-light rounded">
-                            <small class="text-muted">Asistencia Hoy:</small><br>
-                            <span class="badge bg-success"><%= stats.get("presentesHoy") %> Presentes</span>
-                            <span class="badge bg-danger"><%= stats.get("ausentesHoy") %> Ausentes</span>
-                            <div class="mt-1">
-                                <small><strong><%= stats.get("porcentajeAsistencia") %>%</strong> de asistencia</small>
+                        <div class="mb-3 p-3 bg-light rounded">
+                            <small class="text-muted d-block mb-2">
+                                <i class="bi bi-calendar-check"></i> Asistencia Hoy
+                            </small>
+                            <div class="d-flex justify-content-center gap-2 mb-2">
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> <%= stats.get("presentesHoy") %> Presentes
+                                </span>
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i> <%= stats.get("ausentesHoy") %> Ausentes
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <small class="fw-bold text-primary">
+                                    <i class="bi bi-percent"></i> <%= stats.get("porcentajeAsistencia") %>% de asistencia
+                                </small>
                             </div>
                         </div>
                         <% } %>
                         
                         <div class="d-grid gap-2 mt-3">
-                            <a href="TareaServlet?accion=ver&curso_id=<%= c.getId()%>" class="btn btn-outline-secondary btn-sm">Gestionar Tareas</a>
-                            <a href="NotaServlet?curso_id=<%= c.getId()%>" class="btn btn-outline-primary btn-sm">Gestionar Notas</a>
-                            <a href="ObservacionServlet?accion=listar&curso_id=<%= c.getId()%>" class="btn btn-outline-success btn-sm">Gestionar Observaciones</a>
-                            <!-- NUEVO BOTÓN PARA ASISTENCIAS -->
-                            <a href="AsistenciaServlet?accion=verCurso&curso_id=<%= c.getId()%>" class="btn btn-outline-info btn-sm">📊 Gestionar Asistencias</a>
+                            <a href="TareaServlet?accion=ver&curso_id=<%= c.getId()%>" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-journal-check"></i> Gestionar Tareas
+                            </a>
+                            <a href="NotaServlet?curso_id=<%= c.getId()%>" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil-square"></i> Gestionar Notas
+                            </a>
+                            <a href="ObservacionServlet?accion=listar&curso_id=<%= c.getId()%>" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-chat-left-text"></i> Gestionar Observaciones
+                            </a>
+                            <a href="AsistenciaServlet?accion=verCurso&curso_id=<%= c.getId()%>" class="btn btn-outline-info btn-sm">
+                                <i class="bi bi-clipboard-data"></i> Gestionar Asistencias
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -172,8 +210,14 @@
                     }
                 } else {
                 %>
-                <div class="text-center">
-                    <p>No tienes cursos asignados.</p>
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <h5><i class="bi bi-info-circle"></i> No tienes cursos asignados</h5>
+                        <p class="mb-0">Contacta con administración para asignarte cursos.</p>
+                        <a href="DocenteDashboardServlet" class="btn btn-primary mt-2">
+                            <i class="bi bi-arrow-clockwise"></i> Recargar
+                        </a>
+                    </div>
                 </div>
                 <%
                     }
@@ -181,7 +225,7 @@
             </div>
         </div>
 
-        <footer class="bg-dark text-white py-2">
+        <footer class="bg-dark text-white py-2 mt-5">
             <div class="container text-center text-md-start">
                 <div class="row">
                     <div class="col-md-4 mb-0">
@@ -212,5 +256,7 @@
                 </div>
             </div>
         </footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

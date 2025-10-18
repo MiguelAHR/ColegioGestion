@@ -2,6 +2,11 @@
 <%@ page import="modelo.Curso, java.util.List" %>
 <%
     List<Curso> cursos = (List<Curso>) request.getAttribute("misCursos");
+    if (cursos == null) {
+        // Redirigir para cargar los cursos si no están disponibles
+        response.sendRedirect("AsistenciaServlet?accion=ver");
+        return;
+    }
 %>
 <!DOCTYPE html>
 <html>
@@ -15,62 +20,64 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Reportes de Asistencia</h2>
-            <a href="docenteDashboard.jsp" class="btn btn-secondary">← Volver al Dashboard</a>
+            <h2><i class="bi bi-graph-up"></i> Reportes de Asistencia</h2>
+            <a href="docenteDashboard.jsp" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+            </a>
         </div>
 
         <div class="row">
-            <!-- Tarjeta de Reporte Mensual -->
+            <!-- Reporte Mensual -->
             <div class="col-md-6 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
                         <i class="bi bi-calendar-month" style="font-size: 3rem; color: #0d6efd;"></i>
                         <h5 class="card-title mt-3">Reporte Mensual</h5>
                         <p class="card-text">Genera reportes detallados de asistencia por mes y curso.</p>
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalMensual">
-                            Generar Reporte
+                            <i class="bi bi-file-earmark-pdf"></i> Generar Reporte
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Tarjeta de Reporte Trimestral -->
+            <!-- Reporte Trimestral -->
             <div class="col-md-6 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
                         <i class="bi bi-graph-up" style="font-size: 3rem; color: #198754;"></i>
                         <h5 class="card-title mt-3">Reporte Trimestral</h5>
-                        <p class="card-text">Reportes consolidados por trimestre según calendario escolar.</p>
+                        <p class="card-text">Reportes consolidados por trimestre según calendario escolar peruano.</p>
                         <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTrimestral">
-                            Generar Reporte
+                            <i class="bi bi-file-earmark-pdf"></i> Generar Reporte
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Tarjeta de Alertas -->
+            <!-- Alertas -->
             <div class="col-md-6 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
                         <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: #ffc107;"></i>
                         <h5 class="card-title mt-3">Alertas de Asistencia</h5>
                         <p class="card-text">Consulta alumnos con bajo porcentaje de asistencia.</p>
-                        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalAlertas">
-                            Ver Alertas
-                        </button>
+                        <a href="alertasAsistencia.jsp" class="btn btn-warning">
+                            <i class="bi bi-eye"></i> Ver Alertas
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Tarjeta de Estadísticas -->
+            <!-- Estadísticas -->
             <div class="col-md-6 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
                         <i class="bi bi-bar-chart" style="font-size: 3rem; color: #6f42c1;"></i>
                         <h5 class="card-title mt-3">Estadísticas Generales</h5>
                         <p class="card-text">Métricas y estadísticas generales de asistencia.</p>
-                        <a href="estadisticasAsistencia.jsp" class="btn btn-purple" style="background-color: #6f42c1; color: white;">
-                            Ver Estadísticas
+                        <a href="estadisticasAsistencia.jsp" class="btn text-white" style="background-color: #6f42c1;">
+                            <i class="bi bi-graph-up"></i> Ver Estadísticas
                         </a>
                     </div>
                 </div>
@@ -93,19 +100,22 @@
                             <label for="curso_reporte" class="form-label">Curso</label>
                             <select class="form-select" id="curso_reporte" name="curso_id" required>
                                 <option value="">Seleccione un curso</option>
-                                <% if (cursos != null) {
-                                    for (Curso c : cursos) { %>
-                                        <option value="<%= c.getId() %>"><%= c.getNombre() %></option>
-                                    <% }
-                                } %>
+                                <% for (Curso c : cursos) { %>
+                                    <option value="<%= c.getId() %>"><%= c.getNombre() %> - <%= c.getGradoNombre() %></option>
+                                <% } %>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="mes_reporte" class="form-label">Mes</label>
                             <select class="form-select" id="mes_reporte" name="mes" required>
-                                <% for (int i = 1; i <= 12; i++) { %>
-                                    <option value="<%= i %>" <%= i == java.time.LocalDate.now().getMonthValue() ? "selected" : "" %>>
-                                        <%= new java.text.DateFormatSymbols().getMonths()[i-1] %>
+                                <% 
+                                    String[] meses = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                                                     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+                                    int mesActual = java.time.LocalDate.now().getMonthValue();
+                                    for (int i = 1; i <= 12; i++) { 
+                                %>
+                                    <option value="<%= i %>" <%= i == mesActual ? "selected" : "" %>>
+                                        <%= meses[i-1] %>
                                     </option>
                                 <% } %>
                             </select>
@@ -113,10 +123,12 @@
                         <div class="mb-3">
                             <label for="anio_reporte" class="form-label">Año</label>
                             <input type="number" class="form-control" id="anio_reporte" name="anio" 
-                                   value="<%= java.time.LocalDate.now().getYear() %>" required>
+                                   value="<%= java.time.LocalDate.now().getYear() %>" required min="2020" max="2030">
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Generar PDF</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-file-earmark-pdf"></i> Generar PDF
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -146,10 +158,12 @@
                         <div class="mb-3">
                             <label for="anio_trimestral" class="form-label">Año</label>
                             <input type="number" class="form-control" id="anio_trimestral" name="anio" 
-                                   value="<%= java.time.LocalDate.now().getYear() %>" required>
+                                   value="<%= java.time.LocalDate.now().getYear() %>" required min="2020" max="2030">
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-success">Generar PDF</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-file-earmark-pdf"></i> Generar PDF
+                            </button>
                         </div>
                     </form>
                 </div>

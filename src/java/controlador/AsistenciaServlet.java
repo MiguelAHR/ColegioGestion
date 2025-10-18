@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,7 +15,6 @@ import modelo.CursoDAO;
 import modelo.Profesor;
 import modelo.Padre;
 
-@WebServlet("/AsistenciaServlet")
 public class AsistenciaServlet extends HttpServlet {
 
     @Override
@@ -145,7 +143,7 @@ public class AsistenciaServlet extends HttpServlet {
 
     private void verAsistenciasPadreDetalle(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        verAsistenciasPadre(request, response); // Reutilizamos el mismo método
+        verAsistenciasPadre(request, response);
     }
 
     private void mostrarFormRegistro(HttpServletRequest request, HttpServletResponse response)
@@ -169,15 +167,11 @@ public class AsistenciaServlet extends HttpServlet {
 
     private void registrarAsistencia(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Implementar registro individual de asistencia
-        // Esto es un placeholder - necesitarás adaptarlo según tu implementación
         response.sendRedirect("AsistenciaServlet?accion=ver&mensaje=Asistencia registrada");
     }
 
     private void registrarAsistenciaGrupal(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Implementar registro grupal de asistencia
-        // Esto es un placeholder - necesitarás adaptarlo según tu implementación
         response.sendRedirect("AsistenciaServlet?accion=ver&mensaje=Asistencias registradas");
     }
 }

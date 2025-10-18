@@ -40,34 +40,27 @@ public class CursoDAO {
     // Listar los cursos por profesor usando un Stored Procedure
 // En CursoDAO.java - método listarPorProfesor
     public List<Curso> listarPorProfesor(int profesorId) {
-        System.out.println("🔍 [CursoDAO] Buscando cursos para profesor ID: " + profesorId);
         List<Curso> lista = new ArrayList<>();
         String sql = "{CALL obtener_cursos_por_profesor(?)}";
 
         try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
 
-            System.out.println("📋 SQL: " + sql);
             cs.setInt(1, profesorId);
             ResultSet rs = cs.executeQuery();
-            System.out.println("✅ Procedimiento ejecutado");
 
-            int count = 0;
             while (rs.next()) {
-                count++;
                 Curso c = new Curso();
                 c.setId(rs.getInt("id"));
                 c.setNombre(rs.getString("nombre"));
                 c.setGradoId(rs.getInt("grado_id"));
                 c.setProfesorId(rs.getInt("profesor_id"));
                 c.setGradoNombre(rs.getString("grado_nombre"));
+                // Agrega otros campos que necesites
                 lista.add(c);
-                System.out.println("📚 Curso " + count + ": " + c.getNombre() + " - " + c.getGradoNombre());
             }
 
-            System.out.println("📊 Total cursos encontrados en BD: " + count);
-
         } catch (Exception e) {
-            System.out.println("❌ Error en listarPorProfesor:");
+            System.out.println("❌ Error al obtener cursos por profesor");
             e.printStackTrace();
         }
 

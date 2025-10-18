@@ -11,18 +11,18 @@
         return;
     }
     int alumnoId = padre.getAlumnoId();
-    
+
     // Obtener resumen de asistencias del mes actual
     AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
     int mesActual = java.time.LocalDate.now().getMonthValue();
     int anioActual = java.time.LocalDate.now().getYear();
-    
+
     // Obtener resumen de asistencias (usaremos turno 1 por defecto)
     Map<String, Object> resumenAsistencia = asistenciaDAO.obtenerResumenAsistenciaAlumnoTurno(alumnoId, 1, mesActual, anioActual);
-    
+
     // Cargar imágenes ya subidas de este alumno
     List<Imagen> imgs = new ImageDAO().listarPorAlumno(alumnoId);
-    
+
     // Calcular porcentaje de asistencia
     double porcentajeAsistencia = 0.0;
     if (resumenAsistencia != null && !resumenAsistencia.isEmpty()) {
@@ -31,7 +31,7 @@
             porcentajeAsistencia = (Double) porcentajeObj;
         }
     }
-    
+
     // Determinar color del badge según el porcentaje
     String badgeClass = "bg-success";
     if (porcentajeAsistencia < 75) {
@@ -113,7 +113,7 @@
 
         <div class="container mt-5">
             <h2 class="text-center fw-bold mb-4">Panel del Padre de Familia</h2>
-            
+
             <!-- Tarjeta de Resumen de Asistencia -->
             <div class="card asistencia-card mb-4">
                 <div class="card-body">
@@ -122,37 +122,37 @@
                             <h5 class="card-title">🎒 Asistencia Escolar</h5>
                             <p class="card-text mb-1">
                                 <strong>Asistencia Mensual:</strong> 
-                                <span class="badge <%= badgeClass %> fs-6"><%= String.format("%.1f", porcentajeAsistencia) %>%</span>
+                                <span class="badge <%= badgeClass%> fs-6"><%= String.format("%.1f", porcentajeAsistencia)%>%</span>
                             </p>
-                            <% if (resumenAsistencia != null && !resumenAsistencia.isEmpty()) { %>
+                            <% if (resumenAsistencia != null && !resumenAsistencia.isEmpty()) {%>
                             <div class="row mt-2">
                                 <div class="col-3">
-                                    <small>✅ <strong><%= resumenAsistencia.get("presentes") %></strong> Presentes</small>
+                                    <small>✅ <strong><%= resumenAsistencia.get("presentes")%></strong> Presentes</small>
                                 </div>
                                 <div class="col-3">
-                                    <small>⏰ <strong><%= resumenAsistencia.get("tardanzas") %></strong> Tardanzas</small>
+                                    <small>⏰ <strong><%= resumenAsistencia.get("tardanzas")%></strong> Tardanzas</small>
                                 </div>
                                 <div class="col-3">
-                                    <small>❌ <strong><%= resumenAsistencia.get("ausentes") %></strong> Ausentes</small>
+                                    <small>❌ <strong><%= resumenAsistencia.get("ausentes")%></strong> Ausentes</small>
                                 </div>
                                 <div class="col-3">
-                                    <small>📄 <strong><%= resumenAsistencia.get("justificados") %></strong> Justificados</small>
+                                    <small>📄 <strong><%= resumenAsistencia.get("justificados")%></strong> Justificados</small>
                                 </div>
                             </div>
-                            <% } %>
+                            <% }%>
                         </div>
                         <div class="col-md-4 text-end">
                             <a href="AsistenciaServlet?accion=verPadre&alumno_id=<%= alumnoId%>" class="btn btn-light btn-sm me-2">
                                 📊 Ver Detalles
                             </a>
-                            <a href="JustificacionServlet?accion=form&alumno_id=<%= alumnoId%>" class="btn btn-warning btn-sm">
+                            <a href="JustificacionServlet?accion=form" class="btn btn-warning btn-sm">
                                 📝 Justificar Ausencia
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="row g-4 justify-content-center">
 
                 <!-- Notas del Alumno -->

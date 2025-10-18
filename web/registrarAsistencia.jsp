@@ -1,12 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="modelo.Curso, modelo.Alumno, java.util.List" %>
+<%@ page import="modelo.Curso, java.util.List" %>
 <%
     List<Curso> cursos = (List<Curso>) request.getAttribute("cursos");
     String cursoIdParam = request.getParameter("curso_id");
     String fechaParam = request.getParameter("fecha");
     
-    // En una implementación real, aquí cargarías los alumnos del curso seleccionado
-    List<Alumno> alumnos = new java.util.ArrayList<>(); // Placeholder
+    if (fechaParam == null) {
+        fechaParam = java.time.LocalDate.now().toString();
+    }
 %>
 <!DOCTYPE html>
 <html>
@@ -20,8 +21,10 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Registrar Asistencia</h2>
-            <a href="AsistenciaServlet?accion=ver" class="btn btn-secondary">← Volver</a>
+            <h2><i class="bi bi-plus-circle"></i> Registrar Asistencia</h2>
+            <a href="AsistenciaServlet?accion=ver" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
         </div>
 
         <div class="card">
@@ -56,7 +59,7 @@
                         <div class="col-md-3">
                             <label for="fecha" class="form-label">Fecha *</label>
                             <input type="date" class="form-control" id="fecha" name="fecha" 
-                                   value="<%= fechaParam != null ? fechaParam : java.time.LocalDate.now().toString() %>" required>
+                                   value="<%= fechaParam %>" required>
                         </div>
                     </div>
 
@@ -68,33 +71,33 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Acción Rápida</label>
-                            <div>
+                            <div class="d-flex gap-2">
                                 <button type="button" class="btn btn-outline-success btn-sm" onclick="marcarTodos('PRESENTE')">
-                                    Marcar Todos Presentes
+                                    <i class="bi bi-check-circle"></i> Todos Presentes
                                 </button>
                                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="marcarTodos('AUSENTE')">
-                                    Marcar Todos Ausentes
+                                    <i class="bi bi-x-circle"></i> Todos Ausentes
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Lista de alumnos -->
-                    <div class="mb-4">
-                        <h5 class="border-bottom pb-2">Lista de Alumnos</h5>
-                        <div id="lista-alumnos">
-                            <% if (alumnos.isEmpty()) { %>
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i> Seleccione un curso para cargar la lista de alumnos.
-                                </div>
-                            <% } else { 
-                                // Aquí iría el loop para mostrar alumnos
-                            } %>
+                    <!-- Información del curso seleccionado -->
+                    <div id="info-curso" class="alert alert-info" style="display: none;">
+                        <i class="bi bi-info-circle"></i>
+                        <span id="info-text">Seleccione un curso para ver los alumnos</span>
+                    </div>
+
+                    <!-- Lista de alumnos (se cargará dinámicamente) -->
+                    <div id="lista-alumnos" class="mb-4">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            Seleccione un curso para cargar la lista de alumnos.
                         </div>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="btn-guardar" disabled>
                             <i class="bi bi-save"></i> Guardar Asistencias
                         </button>
                         <a href="AsistenciaServlet?accion=ver" class="btn btn-secondary">Cancelar</a>
@@ -110,12 +113,70 @@
             document.querySelectorAll('.estado-alumno').forEach(select => {
                 select.value = estado;
             });
+            verificarEstadoBoton();
         }
         
-        // En una implementación real, aquí iría el código para cargar alumnos vía AJAX
+        function verificarEstadoBoton() {
+            const tieneAlumnos = document.querySelectorAll('.estado-alumno').length > 0;
+            const todosMarcados = Array.from(document.querySelectorAll('.estado-alumno'))
+                .every(select => select.value !== '');
+            
+            document.getElementById('btn-guardar').disabled = !(tieneAlumnos && todosMarcados);
+        }
+        
+        // Simulación de carga de alumnos (en una implementación real sería vía AJAX)
         document.getElementById('curso_id').addEventListener('change', function() {
-            // Cargar alumnos del curso seleccionado
-            console.log('Curso cambiado:', this.value);
+            const cursoId = this.value;
+            const infoCurso = document.getElementById('info-curso');
+            const listaAlumnos = document.getElementById('lista-alumnos');
+            
+            if (cursoId) {
+                // Simular alumnos de ejemplo
+                const alumnos = [
+                    { id: 1, nombre: 'Juan Pérez García' },
+                    { id: 2, nombre: 'María López Martínez' },
+                    { id: 3, nombre: 'Carlos Rodríguez Silva' },
+                    { id: 4, nombre: 'Ana García Torres' }
+                ];
+                
+                let html = '<h5 class="border-bottom pb-2">Lista de Alumnos</h5>';
+                html += '<div class="table-responsive"><table class="table table-striped">';
+                html += '<thead><tr><th>Alumno</th><th>Estado</th></tr></thead><tbody>';
+                
+                alumnos.forEach(alumno => {
+                    html += `
+                        <tr>
+                            <td>
+                                <input type="hidden" name="alumnos[${alumno.id}][id]" value="${alumno.id}">
+                                ${alumno.nombre}
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm estado-alumno" 
+                                        name="alumnos[${alumno.id}][estado]" 
+                                        onchange="verificarEstadoBoton()" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="PRESENTE">Presente</option>
+                                    <option value="TARDANZA">Tardanza</option>
+                                    <option value="AUSENTE">Ausente</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+                listaAlumnos.innerHTML = html;
+                
+                // Mostrar información del curso
+                const cursoSeleccionado = document.querySelector(`#curso_id option[value="${cursoId}"]`).textContent;
+                document.getElementById('info-text').textContent = `Curso seleccionado: ${cursoSeleccionado}`;
+                infoCurso.style.display = 'block';
+                
+            } else {
+                listaAlumnos.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Seleccione un curso para cargar la lista de alumnos.</div>';
+                infoCurso.style.display = 'none';
+                document.getElementById('btn-guardar').disabled = true;
+            }
         });
     </script>
 </body>

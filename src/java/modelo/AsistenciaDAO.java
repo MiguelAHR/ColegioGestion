@@ -129,6 +129,49 @@ public class AsistenciaDAO {
 
         return lista;
     }
+    // En tu clase AsistenciaDAO, agrega este método:
+
+    public List<Asistencia> obtenerAusenciasPorJustificar(int alumnoId) {
+        List<Asistencia> lista = new ArrayList<>();
+        String sql = "{CALL obtener_ausencias_por_justificar(?)}";
+
+        System.out.println("🔍 Ejecutando stored procedure para alumno_id: " + alumnoId);
+
+        try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, alumnoId);
+            ResultSet rs = cs.executeQuery();
+
+            int count = 0;
+            while (rs.next()) {
+                count++;
+                Asistencia a = new Asistencia();
+                a.setId(rs.getInt("id"));
+                a.setFecha(rs.getString("fecha"));
+                a.setHoraClase(rs.getString("hora_clase"));
+                a.setEstado(rs.getString("estado"));
+                a.setCursoNombre(rs.getString("curso_nombre"));
+                a.setAlumnoId(rs.getInt("alumno_id"));
+                lista.add(a);
+
+                System.out.println("📅 Ausencia encontrada: " + a.getFecha() + " - " + a.getCursoNombre());
+            }
+
+            System.out.println("✅ Total de ausencias encontradas: " + count);
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error SQL al obtener ausencias por justificar:");
+            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("   Estado: " + e.getSQLState());
+            System.out.println("   Mensaje: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("❌ Error general al obtener ausencias por justificar para alumno: " + alumnoId);
+            e.printStackTrace();
+        }
+
+        return lista;
+    }
 
     public Map<String, Object> obtenerResumenAsistenciaAlumnoTurno(int alumnoId, int turnoId, int mes, int anio) {
         Map<String, Object> resumen = new HashMap<>();

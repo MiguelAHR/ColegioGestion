@@ -8,6 +8,7 @@
             <web-module-libraries>
                 <library dirs="200">
                     <file>${file.reference.mysql-connector-j-9.3.0.jar}</file>
+                    <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
                     <file>${file.reference.poi-bin-5.2.3-lib}</file>
