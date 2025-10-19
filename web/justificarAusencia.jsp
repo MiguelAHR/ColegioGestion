@@ -2,7 +2,8 @@
 <%@ page import="modelo.Asistencia, java.util.List" %>
 <%
     List<Asistencia> ausencias = (List<Asistencia>) request.getAttribute("ausencias");
-    String alumnoId = (String) request.getAttribute("alumnoId");
+    // CORRECCIÓN: Cambiar String por Integer
+    Integer alumnoId = (Integer) request.getAttribute("alumnoId");
     String error = (String) request.getAttribute("error");
     String mensaje = (String) request.getAttribute("mensaje");
     
@@ -24,6 +25,9 @@
     if (ausencias == null) {
         ausencias = new java.util.ArrayList<>();
     }
+    
+    // CORRECCIÓN: Convertir alumnoId a String para el hidden input
+    String alumnoIdStr = (alumnoId != null) ? String.valueOf(alumnoId) : "";
 %>
 <!DOCTYPE html>
 <html>
@@ -63,7 +67,8 @@
                     <div class="card-body">
                         <form method="post" action="JustificacionServlet">
                             <input type="hidden" name="accion" value="crear">
-                            <input type="hidden" name="alumno_id" value="<%= alumnoId != null ? alumnoId : "" %>">
+                            <%-- CORRECCIÓN: Usar alumnoIdStr --%>
+                            <input type="hidden" name="alumno_id" value="<%= alumnoIdStr %>">
                             
                             <div class="mb-3">
                                 <label for="asistencia_id" class="form-label">Seleccione la ausencia a justificar *</label>

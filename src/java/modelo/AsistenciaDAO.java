@@ -116,9 +116,7 @@ public class AsistenciaDAO {
                 a.setRegistradoPor(rs.getInt("registrado_por"));
                 a.setCursoNombre(rs.getString("curso_nombre"));
                 a.setTurnoNombre(rs.getString("turno_nombre"));
-
                 a.setGradoNombre(rs.getString("grado_nombre"));
-
                 lista.add(a);
             }
 
@@ -129,7 +127,6 @@ public class AsistenciaDAO {
 
         return lista;
     }
-    // En tu clase AsistenciaDAO, agrega este método:
 
     public List<Asistencia> obtenerAusenciasPorJustificar(int alumnoId) {
         List<Asistencia> lista = new ArrayList<>();

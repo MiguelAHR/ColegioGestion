@@ -39,9 +39,8 @@ public class JustificacionServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            // Usar sesión para evitar problemas de URL
             HttpSession session = request.getSession();
-            session.setAttribute("error", "Error interno del sistema");
+            session.setAttribute("error", "Error interno del sistema: " + e.getMessage());
             response.sendRedirect("error.jsp");
         }
     }
@@ -70,9 +69,8 @@ public class JustificacionServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            // Usar sesión para evitar problemas de URL
             HttpSession session = request.getSession();
-            session.setAttribute("error", "Error al procesar la solicitud");
+            session.setAttribute("error", "Error al procesar la solicitud: " + e.getMessage());
             response.sendRedirect("error.jsp");
         }
     }
@@ -91,12 +89,22 @@ public class JustificacionServlet extends HttpServlet {
 
         try {
             System.out.println("🔍 Buscando ausencias para alumno_id: " + padre.getAlumnoId());
+            System.out.println("👤 Padre (username): " + padre.getUsername()); // CORREGIDO
+            System.out.println("🎒 Alumno: " + padre.getAlumnoNombre());
 
             // Cargar las ausencias del alumno para justificar
             AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
             List<Asistencia> ausencias = asistenciaDAO.obtenerAusenciasPorJustificar(padre.getAlumnoId());
 
             System.out.println("📊 Número de ausencias encontradas: " + ausencias.size());
+            
+            // Debug detallado de las ausencias
+            for (Asistencia a : ausencias) {
+                System.out.println("📅 Ausencia: ID=" + a.getId() + 
+                                 ", Fecha=" + a.getFecha() + 
+                                 ", Curso=" + a.getCursoNombre() + 
+                                 ", Estado=" + a.getEstado());
+            }
 
             request.setAttribute("ausencias", ausencias);
             request.setAttribute("alumnoId", padre.getAlumnoId());
@@ -105,8 +113,7 @@ public class JustificacionServlet extends HttpServlet {
         } catch (Exception e) {
             System.out.println("❌ ERROR en mostrarFormJustificacion:");
             e.printStackTrace();
-            // CORRECCIÓN: Usar la variable session existente, no crear una nueva
-            session.setAttribute("error", "Error al cargar las ausencias. Por favor intente nuevamente.");
+            session.setAttribute("error", "Error al cargar las ausencias: " + e.getMessage());
             response.sendRedirect("asistenciasPadre.jsp");
         }
     }
@@ -149,6 +156,13 @@ public class JustificacionServlet extends HttpServlet {
             String tipoJustificacion = request.getParameter("tipo_justificacion");
             String descripcion = request.getParameter("descripcion");
 
+            System.out.println("📝 Creando justificación:");
+            System.out.println("   Asistencia ID: " + asistenciaId);
+            System.out.println("   Tipo: " + tipoJustificacion);
+            System.out.println("   Descripción: " + descripcion);
+            System.out.println("   Justificado por: " + padre.getId());
+            System.out.println("   Padre username: " + padre.getUsername()); // CORREGIDO
+
             Justificacion justificacion = new Justificacion();
             justificacion.setAsistenciaId(asistenciaId);
             justificacion.setTipoJustificacion(tipoJustificacion);
@@ -159,9 +173,11 @@ public class JustificacionServlet extends HttpServlet {
             boolean exito = justificacionDAO.crearJustificacion(justificacion);
 
             if (exito) {
+                System.out.println("✅ Justificación creada exitosamente");
                 session.setAttribute("mensaje", "Justificación enviada correctamente");
                 response.sendRedirect("AsistenciaServlet?accion=verPadre");
             } else {
+                System.out.println("❌ Error al crear justificación");
                 session.setAttribute("error", "Error al enviar la justificación");
                 response.sendRedirect("JustificacionServlet?accion=form");
             }
@@ -170,7 +186,7 @@ public class JustificacionServlet extends HttpServlet {
             response.sendRedirect("JustificacionServlet?accion=form");
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Error interno al procesar la justificación");
+            session.setAttribute("error", "Error interno al procesar la justificación: " + e.getMessage());
             response.sendRedirect("JustificacionServlet?accion=form");
         }
     }
@@ -193,7 +209,7 @@ public class JustificacionServlet extends HttpServlet {
             response.sendRedirect("JustificacionServlet?accion=pending");
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Error al procesar la aprobación");
+            session.setAttribute("error", "Error al procesar la aprobación: " + e.getMessage());
             response.sendRedirect("JustificacionServlet?accion=pending");
         }
     }
@@ -216,7 +232,7 @@ public class JustificacionServlet extends HttpServlet {
             response.sendRedirect("JustificacionServlet?accion=pending");
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Error al procesar el rechazo");
+            session.setAttribute("error", "Error al procesar el rechazo: " + e.getMessage());
             response.sendRedirect("JustificacionServlet?accion=pending");
         }
     }
