@@ -2,6 +2,7 @@ package modelo;
 
 import conexion.Conexion;
 import util.PasswordUtils;  // Importar la clase de utilidades
+import util.ValidacionContraseña; // IMPORTANTE: Agregar este import para validación
 import java.sql.*;
 import java.util.*;
 
@@ -28,8 +29,14 @@ public class UsuarioDAO {
         return lista;
     }
 
-    // Agregar un usuario usando BCrypt
+    // Agregar un usuario usando BCrypt - CON VALIDACIÓN DE CONTRASEÑA FUERTE
     public boolean agregar(Usuario u) {
+        // ✅ VALIDAR CONTRASEÑA FUERTE ANTES DE REGISTRAR
+        if (!ValidacionContraseña.esPasswordFuerte(u.getPassword())) {
+            System.out.println("❌ Contraseña débil - No se puede registrar usuario: " + u.getUsername());
+            return false;
+        }
+        
         String sql = "{CALL crear_usuario(?, ?, ?)}";
 
         try (Connection con = Conexion.getConnection();
@@ -42,6 +49,8 @@ public class UsuarioDAO {
             cs.setString(2, hashedPassword); // Guardar contraseña encriptada
             cs.setString(3, u.getRol());
             cs.executeUpdate();
+            
+            System.out.println("✅ Usuario registrado con contraseña fuerte: " + u.getUsername());
             return true;
 
         } catch (Exception e) {
@@ -230,7 +239,7 @@ public class UsuarioDAO {
         }
     }
 
-    // Actualizar un usuario - CON ENCRIPTACIÓN SI CAMBIA CONTRASEÑA
+    // Actualizar un usuario - ❌ ELIMINADA validación de contraseña fuerte
     public boolean actualizar(Usuario u) {
         String sql = "{CALL actualizar_usuario(?, ?, ?, ?, ?, ?)}";
 
@@ -239,8 +248,11 @@ public class UsuarioDAO {
 
             // VERIFICAR SI LA CONTRASEÑA NECESITA SER ENCRIPTADA
             String password = u.getPassword();
-            // Si la contraseña no empieza con el patrón de BCrypt, encriptarla
+            
+            // ❌ ELIMINADO: Validación de contraseña fuerte en actualización
+            // Los usuarios pueden mantener su contraseña actual sin forzar cambios
             if (password != null && !password.startsWith("$2a$")) {
+                // Es una nueva contraseña (no encriptada) - Se encripta pero no se valida fortaleza
                 password = PasswordUtils.hashPassword(password);
             }
 
@@ -251,6 +263,8 @@ public class UsuarioDAO {
             cs.setInt(5, u.getIntentosFallidos());
             cs.setBoolean(6, u.isActivo());
             cs.executeUpdate();
+            
+            System.out.println("✅ Usuario actualizado: " + u.getUsername());
             return true;
 
         } catch (Exception e) {

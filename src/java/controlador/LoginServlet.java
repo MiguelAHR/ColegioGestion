@@ -11,6 +11,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import modelo.UsuarioDAO;
 import modelo.Usuario; // IMPORTANTE: Agregar este import
+import util.ValidacionContraseña; // ✅ MANTENER para el endpoint de validación
 
 public class LoginServlet extends HttpServlet {
 
@@ -43,6 +44,9 @@ public class LoginServlet extends HttpServlet {
                 dispatcher.forward(request, response);
                 return;
             }
+
+            // ❌ ELIMINADO: Validación de contraseña fuerte en login
+            // Los usuarios existentes con contraseñas débiles pueden loguearse normalmente
 
             // VERIFICAR CREDENCIALES CON BCRYPT
             boolean credencialesValidas = usuarioDAO.verificarCredenciales(user, pass);
@@ -167,6 +171,25 @@ public class LoginServlet extends HttpServlet {
                 } catch (Exception e) {
                     response.setContentType("application/json");
                     response.getWriter().write("{\"bloqueado\": false}");
+                    return;
+                }
+            }
+        }
+
+        // ✅ MANTENER: Endpoint para verificar fortaleza de contraseña en tiempo real (para usuarioForm.jsp)
+        if ("verificarPassword".equals(accion)) {
+            String password = request.getParameter("password");
+            if (password != null) {
+                try {
+                    boolean esFuerte = ValidacionContraseña.esPasswordFuerte(password);
+                    String mensaje = esFuerte ? "Contraseña segura" : ValidacionContraseña.obtenerRequisitosPassword();
+                    
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"esFuerte\": " + esFuerte + ", \"mensaje\": \"" + mensaje + "\"}");
+                    return;
+                } catch (Exception e) {
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"esFuerte\": false, \"mensaje\": \"Error al validar contraseña\"}");
                     return;
                 }
             }
