@@ -218,20 +218,63 @@ public class AsistenciaServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Profesor docente = (Profesor) session.getAttribute("docente");
 
+        System.out.println("=== 🔍 INICIANDO MOSTRAR FORM REGISTRO ===");
+        System.out.println("   Docente en sesión: " + (docente != null ? docente.getNombres() + " " + docente.getApellidos() : "NULL"));
+        System.out.println("   Docente ID: " + (docente != null ? docente.getId() : "NULL"));
+
         if (docente == null) {
+            System.out.println("❌ ERROR: No hay docente en sesión");
             session.setAttribute("error", "Sesión expirada. Por favor inicie sesión nuevamente.");
             response.sendRedirect("index.jsp");
             return;
         }
 
         try {
-            System.out.println("🔍 Cargando formulario para profesor: " + docente.getNombres() + " " + docente.getApellidos());
+            // Obtener parámetros de la URL
+            String cursoIdParam = request.getParameter("curso_id");
+            String fechaParam = request.getParameter("fecha");
+
+            System.out.println("📌 Parámetros recibidos:");
+            System.out.println("   curso_id: " + cursoIdParam);
+            System.out.println("   fecha: " + fechaParam);
 
             CursoDAO cursoDAO = new CursoDAO();
-            // CORREGIDO: Usar listarPorProfesor en lugar de obtenerCursosPorProfesor
             List<Curso> cursos = cursoDAO.listarPorProfesor(docente.getId());
 
+            System.out.println("📊 Cursos encontrados: " + (cursos != null ? cursos.size() : "null"));
+
+            if (cursos != null && !cursos.isEmpty()) {
+                for (Curso curso : cursos) {
+                    System.out.println("   - Curso: " + curso.getId() + " - " + curso.getNombre() + " - Grado: " + curso.getGradoNombre());
+                }
+            } else {
+                System.out.println("⚠️  No se encontraron cursos para el profesor");
+            }
+
+            // Si no hay cursos, mostrar mensaje de error
+            if (cursos == null || cursos.isEmpty()) {
+                System.out.println("❌ ERROR: No hay cursos asignados");
+                session.setAttribute("error", "No tienes cursos asignados. Contacta con administración.");
+                response.sendRedirect("docenteDashboard.jsp");
+                return;
+            }
+
+            // Si no se proporcionó curso_id pero hay cursos, usar el primero por defecto
+            if ((cursoIdParam == null || cursoIdParam.isEmpty()) && !cursos.isEmpty()) {
+                cursoIdParam = String.valueOf(cursos.get(0).getId());
+                System.out.println("🔄 Usando primer curso por defecto: " + cursoIdParam);
+            }
+
+            // Poner los datos en el request para el JSP
             request.setAttribute("cursos", cursos);
+            request.setAttribute("cursoIdParam", cursoIdParam);
+            request.setAttribute("fechaParam", fechaParam);
+
+            System.out.println("✅ Datos preparados para el JSP:");
+            System.out.println("   - Cursos: " + cursos.size());
+            System.out.println("   - Curso seleccionado: " + cursoIdParam);
+            System.out.println("   - Fecha: " + fechaParam);
+
             request.getRequestDispatcher("registrarAsistencia.jsp").forward(request, response);
 
         } catch (Exception e) {
@@ -258,7 +301,7 @@ public class AsistenciaServlet extends HttpServlet {
             String horaClase = request.getParameter("hora_clase");
             String estado = request.getParameter("estado");
             String observaciones = request.getParameter("observaciones");
-            
+
             // ✅ CORREGIDO: Verificar docente antes de obtener ID
             Profesor docente = (Profesor) session.getAttribute("docente");
             if (docente == null) {
@@ -266,7 +309,7 @@ public class AsistenciaServlet extends HttpServlet {
                 response.sendRedirect("index.jsp");
                 return;
             }
-            
+
             int registradoPor = docente.getId();
 
             Asistencia asistencia = new Asistencia();

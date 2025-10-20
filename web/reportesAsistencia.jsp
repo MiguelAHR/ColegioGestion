@@ -26,6 +26,23 @@
             </a>
         </div>
 
+        <!-- Botón para Registrar Asistencia -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title mb-3">
+                            <i class="bi bi-clock-history"></i> Acción Rápida
+                        </h5>
+                        <p class="card-text mb-3">¿Necesitas registrar asistencia para hoy?</p>
+                        <a href="AsistenciaServlet?accion=registrar" class="btn btn-primary btn-lg">
+                            <i class="bi bi-plus-circle"></i> Registrar Asistencia
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <!-- Reporte Mensual -->
             <div class="col-md-6 mb-4">

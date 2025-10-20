@@ -4,23 +4,23 @@
 <%
     Profesor docente = (Profesor) session.getAttribute("docente");
     List<Curso> cursos = (List<Curso>) request.getAttribute("misCursos");
-    
+
     // Verificar si el docente está en sesión
     if (docente == null) {
         response.sendRedirect("index.jsp");
         return;
     }
-    
+
     // Si no hay cursos cargados, redirigir al servlet para cargarlos
     if (cursos == null) {
         response.sendRedirect("DocenteDashboardServlet");
         return;
     }
-    
+
     // Obtener estadísticas de asistencias para cada curso
     AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
     Map<Integer, Map<String, Object>> estadisticasCursos = new HashMap<>();
-    
+
     // Por ahora datos de ejemplo - en producción conectar con BD
     if (cursos != null && !cursos.isEmpty()) {
         for (Curso curso : cursos) {
@@ -29,15 +29,15 @@
             stats.put("presentesHoy", 22);
             stats.put("ausentesHoy", 3);
             stats.put("porcentajeAsistencia", 88.0);
-            
+
             estadisticasCursos.put(curso.getId(), stats);
         }
     }
-    
+
     // Manejar mensajes de éxito o error
     String mensaje = (String) session.getAttribute("mensaje");
     String error = (String) session.getAttribute("error");
-    
+
     if (mensaje != null) {
         session.removeAttribute("mensaje");
     }
@@ -130,27 +130,26 @@
         </div>
 
         <div class="container mt-5">
-            
+
             <!-- Mostrar mensajes -->
-            <% if (mensaje != null) { %>
+            <% if (mensaje != null) {%>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle"></i> <%= mensaje %>
+                <i class="bi bi-check-circle"></i> <%= mensaje%>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <% } %>
-            
-            <% if (error != null) { %>
+
+            <% if (error != null) {%>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle"></i> <%= error %>
+                <i class="bi bi-exclamation-triangle"></i> <%= error%>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <% } %>
-            
+
             <h2 class="text-center fw-bold mb-5">
                 <i class="bi bi-speedometer2"></i> Panel del Docente
             </h2>
 
-            <!-- Sección de Asistencias Rápidas -->
             <div class="card mb-4 stats-card">
                 <div class="card-body">
                     <h5 class="card-title mb-3">
@@ -158,9 +157,11 @@
                     </h5>
                     <div class="row">
                         <div class="col-md-4">
-                            <a href="AsistenciaServlet?accion=registrar" class="btn btn-light btn-block mb-2 w-100">
-                                <i class="bi bi-plus-circle"></i> Tomar Asistencia
-                            </a>
+                            <div class="col-md-4">
+                                <a href="AsistenciaServlet?accion=registrar" class="btn btn-light btn-block mb-2 w-100">
+                                    <i class="bi bi-plus-circle"></i> Tomar Asistencia
+                                </a>
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <a href="AsistenciaServlet?accion=reportes" class="btn btn-info btn-block mb-2 w-100 text-white">
@@ -191,31 +192,31 @@
                             <strong>Grado:</strong> <%= c.getGradoNombre()%>
                         </p>
                         <p class="mb-3 text-muted small">
-                            <strong>Profesor:</strong> <%= c.getProfesorNombre() != null ? c.getProfesorNombre() : "No asignado" %>
+                            <strong>Profesor:</strong> <%= c.getProfesorNombre() != null ? c.getProfesorNombre() : "No asignado"%>
                         </p>
-                        
+
                         <!-- Información de Asistencia -->
-                        <% if (stats != null) { %>
+                        <% if (stats != null) {%>
                         <div class="mb-3 p-3 bg-light rounded">
                             <small class="text-muted d-block mb-2">
                                 <i class="bi bi-calendar-check"></i> Asistencia Hoy
                             </small>
                             <div class="d-flex justify-content-center gap-2 mb-2">
                                 <span class="badge bg-success">
-                                    <i class="bi bi-check-circle"></i> <%= stats.get("presentesHoy") %> Presentes
+                                    <i class="bi bi-check-circle"></i> <%= stats.get("presentesHoy")%> Presentes
                                 </span>
                                 <span class="badge bg-danger">
-                                    <i class="bi bi-x-circle"></i> <%= stats.get("ausentesHoy") %> Ausentes
+                                    <i class="bi bi-x-circle"></i> <%= stats.get("ausentesHoy")%> Ausentes
                                 </span>
                             </div>
                             <div class="mt-2">
                                 <small class="fw-bold text-primary">
-                                    <i class="bi bi-percent"></i> <%= stats.get("porcentajeAsistencia") %>% de asistencia
+                                    <i class="bi bi-percent"></i> <%= stats.get("porcentajeAsistencia")%>% de asistencia
                                 </small>
                             </div>
                         </div>
-                        <% } %>
-                        
+                        <% }%>
+
                         <div class="d-grid gap-2 mt-3">
                             <a href="TareaServlet?accion=ver&curso_id=<%= c.getId()%>" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-journal-check"></i> Gestionar Tareas
@@ -226,7 +227,8 @@
                             <a href="ObservacionServlet?accion=listar&curso_id=<%= c.getId()%>" class="btn btn-outline-success btn-sm">
                                 <i class="bi bi-chat-left-text"></i> Gestionar Observaciones
                             </a>
-                            <a href="AsistenciaServlet?accion=verCurso&curso_id=<%= c.getId()%>" class="btn btn-outline-info btn-sm">
+                            <!-- En la sección de cada curso, cambia el enlace: -->
+                            <a href="AsistenciaServlet?accion=registrar&curso_id=<%= c.getId()%>" class="btn btn-outline-info btn-sm">
                                 <i class="bi bi-clipboard-data"></i> Gestionar Asistencias
                             </a>
                         </div>
