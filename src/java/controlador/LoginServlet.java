@@ -31,37 +31,56 @@ public class LoginServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=UTF-8");
 
+        System.out.println("=========================================");
+        System.out.println("🎯 MÉTODO doPost INICIADO - DEBUG COMPLETO");
+        
+        // DEBUG: Mostrar todos los parámetros recibidos
+        System.out.println("🔍 TODOS LOS PARÁMETROS RECIBIDOS:");
+        java.util.Enumeration<String> parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String paramName = parameterNames.nextElement();
+            String paramValue = request.getParameter(paramName);
+            System.out.println("   📌 " + paramName + " = '" + paramValue + "'");
+        }
+
         String user = request.getParameter("username");
         String pass = request.getParameter("password");
         String captchaInput = request.getParameter("captchaInput");
         String captchaHidden = request.getParameter("captchaHidden");
 
-        System.out.println("=========================================");
-        System.out.println("🎯 MÉTODO doPost INICIADO");
-        System.out.println("🔐 INICIO PROCESO LOGIN CON CAPTCHA");
-        System.out.println("📧 Usuario: " + user);
-        System.out.println("🔑 Longitud password: " + (pass != null ? pass.length() : "null"));
-        System.out.println("📝 CAPTCHA recibido: " + captchaInput);
-        System.out.println("📝 CAPTCHA esperado: " + captchaHidden);
+        System.out.println("🔍 VALORES EXTRAÍDOS:");
+        System.out.println("   - username: '" + user + "'");
+        System.out.println("   - password: '" + (pass != null ? "***" + pass.length() + " chars***" : "null") + "'");
+        System.out.println("   - captchaInput: '" + captchaInput + "'");
+        System.out.println("   - captchaHidden: '" + captchaHidden + "'");
 
         try {
-            // ✅ VALIDACIÓN CAPTCHA CON MÁS DETALLES
+            // ✅ VALIDACIÓN CAPTCHA MEJORADA
             if (CAPTCHA_ACTIVADO) {
                 System.out.println("🔍 Validando CAPTCHA...");
-                System.out.println("   - CaptchaHidden: '" + captchaHidden + "'");
-                System.out.println("   - CaptchaInput: '" + captchaInput + "'");
-                System.out.println("   - Son iguales: " + (captchaHidden != null && captchaInput != null && captchaHidden.equals(captchaInput)));
                 
                 if (captchaHidden == null || captchaInput == null) {
                     System.out.println("❌ CAPTCHA NULL - Hidden: " + (captchaHidden == null) + ", Input: " + (captchaInput == null));
-                    response.getWriter().write("{\"success\": false, \"error\": \"Código de verificación requerido\"}");
+                    String errorJson = "{\"success\": false, \"error\": \"Código de verificación requerido\"}";
+                    System.out.println("📤 Enviando respuesta: " + errorJson);
+                    response.getWriter().write(errorJson);
                     return;
                 }
                 
-                // ✅ COMPARACIÓN CASE-SENSITIVE (sin IgnoreCase)
-                if (!captchaHidden.equals(captchaInput)) {
+                String cleanedHidden = captchaHidden.trim().replaceAll("\\s+", "");
+                String cleanedInput = captchaInput.trim().replaceAll("\\s+", "");
+                
+                System.out.println("   - CaptchaHidden (cleaned): '" + cleanedHidden + "'");
+                System.out.println("   - CaptchaInput (cleaned): '" + cleanedInput + "'");
+                System.out.println("   - Longitud Hidden: " + cleanedHidden.length());
+                System.out.println("   - Longitud Input: " + cleanedInput.length());
+                System.out.println("   - Son iguales: " + cleanedHidden.equals(cleanedInput));
+                
+                if (!cleanedHidden.equals(cleanedInput)) {
                     System.out.println("❌ CAPTCHA INCORRECTO - Acceso denegado");
-                    response.getWriter().write("{\"success\": false, \"error\": \"Código de verificación incorrecto\"}");
+                    String errorJson = "{\"success\": false, \"error\": \"Código de verificación incorrecto\"}";
+                    System.out.println("📤 Enviando respuesta: " + errorJson);
+                    response.getWriter().write(errorJson);
                     return;
                 } else {
                     System.out.println("✅ CAPTCHA VALIDADO CORRECTAMENTE");
@@ -82,7 +101,9 @@ public class LoginServlet extends HttpServlet {
                 long tiempoRestante = calcularTiempoRestanteBloqueo(user);
                 System.out.println("⏰ Tiempo restante bloqueo: " + tiempoRestante + "ms");
                 
-                response.getWriter().write("{\"success\": false, \"error\": \"Usuario bloqueado. Intente más tarde.\"}");
+                String errorJson = "{\"success\": false, \"error\": \"Usuario bloqueado. Intente más tarde.\"}";
+                System.out.println("📤 Enviando respuesta: " + errorJson);
+                response.getWriter().write(errorJson);
                 return;
             } else {
                 System.out.println("✅ Usuario no está bloqueado");
@@ -116,13 +137,21 @@ public class LoginServlet extends HttpServlet {
                     
                     if (redirectUrl != null) {
                         System.out.println("➡️ REDIRIGIENDO A: " + redirectUrl);
-                        response.getWriter().write("{\"success\": true, \"redirect\": \"" + redirectUrl + "\"}");
+                        String successJson = "{\"success\": true, \"redirect\": \"" + redirectUrl + "\"}";
+                        System.out.println("📤 Enviando respuesta: " + successJson);
+                        response.getWriter().write(successJson);
+                    } else {
+                        String errorJson = "{\"success\": false, \"error\": \"No se pudo determinar la redirección\"}";
+                        System.out.println("📤 Enviando respuesta: " + errorJson);
+                        response.getWriter().write(errorJson);
                     }
                     return;
                     
                 } else {
                     System.out.println("❌ ERROR: Usuario autenticado pero no encontrado en BD");
-                    response.getWriter().write("{\"success\": false, \"error\": \"Error del sistema. Contacte al administrador.\"}");
+                    String errorJson = "{\"success\": false, \"error\": \"Error del sistema. Contacte al administrador.\"}";
+                    System.out.println("📤 Enviando respuesta: " + errorJson);
+                    response.getWriter().write(errorJson);
                     return;
                 }
 
@@ -138,16 +167,27 @@ public class LoginServlet extends HttpServlet {
                     System.out.println("🚫 BLOQUEANDO USUARIO POR MÁXIMOS INTENTOS");
                     usuarioDAO.bloquearUsuario(user);
                     
-                    response.getWriter().write("{\"success\": false, \"error\": \"Usuario bloqueado por intentos fallidos.\"}");
+                    String errorJson = "{\"success\": false, \"error\": \"Usuario bloqueado por intentos fallidos.\"}";
+                    System.out.println("📤 Enviando respuesta: " + errorJson);
+                    response.getWriter().write(errorJson);
                 } else {
-                    response.getWriter().write("{\"success\": false, \"error\": \"Credenciales incorrectas. Intentos restantes: " + intentosRestantes + "\"}");
+                    String errorJson = "{\"success\": false, \"error\": \"Credenciales incorrectas. Intentos restantes: " + intentosRestantes + "\"}";
+                    System.out.println("📤 Enviando respuesta: " + errorJson);
+                    response.getWriter().write(errorJson);
                 }
             }
 
         } catch (Exception e) {
             System.out.println("💥 ERROR CRÍTICO EN LOGIN:");
             e.printStackTrace();
-            response.getWriter().write("{\"success\": false, \"error\": \"Error del sistema. Intente nuevamente.\"}");
+            // ✅ ASEGURAR QUE SIEMPRE SE ENVÍE UNA RESPUESTA
+            try {
+                String errorJson = "{\"success\": false, \"error\": \"Error interno del servidor: " + e.getMessage().replace("\"", "'") + "\"}";
+                System.out.println("📤 Enviando respuesta de error: " + errorJson);
+                response.getWriter().write(errorJson);
+            } catch (Exception ex) {
+                System.out.println("💥 ERROR ENVIANDO RESPUESTA DE ERROR: " + ex.getMessage());
+            }
         } finally {
             System.out.println("🏁 FIN PROCESO LOGIN");
             System.out.println("=========================================");
