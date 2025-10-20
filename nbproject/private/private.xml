@@ -3,37 +3,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/asistenciasDocente.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/asistenciasCurso.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/asistenciasPadre.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/registrarAsistencia.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/reportesAsistencia.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/justificarAusencia.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/justificacionesPendientes.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/justificacionesPadre.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/docenteDashboard.jsp</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/DocenteDashboardServlet.java</file>
+            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/index.html</file>
             <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/LoginServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/modelo/CursoDAO.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/NotasPadreServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/NotaServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/LogoutServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/JustificacionServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/GradoServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/ExportServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/DeleteImageServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/AsistenciaServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/CursoServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/controlador/AlumnoServlet.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/modelo/Justificacion.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/modelo/JustificacionDAO.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/modelo/AsistenciaDAO.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/modelo/Asistencia.java</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/padreDashboard.jsp</file>
             <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/WEB-INF/web.xml</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/nbproject/build-impl.xml</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/build.xml</file>
-            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/src/java/modelo/AlumnoDAO.java</file>
+            <file>file:/D:/2.1%20proyecto/ColegioGestionWeb/web/index.jsp</file>
         </group>
     </open-files>
 </project-private>
