@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
 import java.util.Date;
@@ -25,8 +21,21 @@ public class Asistencia {
     private String cursoNombre;
     private String turnoNombre;
     private String profesorNombre;
-    private String gradoNombre; // ✅ AGREGAR ESTE CAMPO QUE FALTABA
+    private String gradoNombre;
 
+    // Constructores
+    public Asistencia() {}
+    
+    public Asistencia(int alumnoId, int cursoId, int turnoId, String fecha, String horaClase, String estado) {
+        this.alumnoId = alumnoId;
+        this.cursoId = cursoId;
+        this.turnoId = turnoId;
+        this.fecha = fecha;
+        this.horaClase = horaClase;
+        this.estado = estado;
+    }
+
+    // Getters y Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -77,4 +86,14 @@ public class Asistencia {
 
     public String getGradoNombre() { return gradoNombre; }
     public void setGradoNombre(String gradoNombre) { this.gradoNombre = gradoNombre; }
+
+    @Override
+    public String toString() {
+        return "Asistencia{" + "id=" + id + ", alumnoId=" + alumnoId + ", cursoId=" + cursoId + 
+               ", turnoId=" + turnoId + ", fecha=" + fecha + ", horaClase=" + horaClase + 
+               ", estado=" + estado + ", observaciones=" + observaciones + 
+               ", registradoPor=" + registradoPor + ", alumnoNombre=" + alumnoNombre + 
+               ", cursoNombre=" + cursoNombre + ", turnoNombre=" + turnoNombre + 
+               ", profesorNombre=" + profesorNombre + ", gradoNombre=" + gradoNombre + '}';
+    }
 }

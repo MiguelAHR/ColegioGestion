@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
 public class Alumno {
@@ -11,7 +7,19 @@ public class Alumno {
     private String correo;
     private String fechaNacimiento;
     private int gradoId;
+    private String gradoNombre; // ✅ Campo adicional para compatibilidad
 
+    // Constructores
+    public Alumno() {}
+    
+    public Alumno(int id, String nombres, String apellidos, int gradoId) {
+        this.id = id;
+        this.nombres = nombres;
+        this.apellidos = apellidos;
+        this.gradoId = gradoId;
+    }
+
+    // Getters y Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -27,7 +35,15 @@ public class Alumno {
     public String getFechaNacimiento() { return fechaNacimiento; }
     public void setFechaNacimiento(String fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
 
-    // ✅ GETTER Y SETTER PARA gradoId
     public int getGradoId() { return gradoId; }
     public void setGradoId(int gradoId) { this.gradoId = gradoId; }
+
+    public String getGradoNombre() { return gradoNombre; }
+    public void setGradoNombre(String gradoNombre) { this.gradoNombre = gradoNombre; }
+
+    @Override
+    public String toString() {
+        return "Alumno{" + "id=" + id + ", nombres=" + nombres + ", apellidos=" + apellidos + 
+               ", gradoId=" + gradoId + ", gradoNombre=" + gradoNombre + '}';
+    }
 }

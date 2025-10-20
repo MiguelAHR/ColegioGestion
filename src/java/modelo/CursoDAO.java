@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
 import conexion.Conexion;
@@ -38,7 +34,6 @@ public class CursoDAO {
     }
 
     // Listar los cursos por profesor usando un Stored Procedure
-// En CursoDAO.java - método listarPorProfesor
     public List<Curso> listarPorProfesor(int profesorId) {
         List<Curso> lista = new ArrayList<>();
         String sql = "{CALL obtener_cursos_por_profesor(?)}";
@@ -57,10 +52,20 @@ public class CursoDAO {
                 c.setGradoNombre(rs.getString("grado_nombre"));
                 // Agrega otros campos que necesites
                 lista.add(c);
+                
+                System.out.println("✅ Curso encontrado: " + c.getNombre() + " - Grado: " + c.getGradoNombre());
             }
 
+            System.out.println("✅ Total cursos encontrados para profesor " + profesorId + ": " + lista.size());
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error SQL en listarPorProfesor:");
+            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("   Estado: " + e.getSQLState());
+            System.out.println("   Mensaje: " + e.getMessage());
+            e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener cursos por profesor");
+            System.out.println("❌ Error general en listarPorProfesor:");
             e.printStackTrace();
         }
 
@@ -173,5 +178,21 @@ public class CursoDAO {
             e.printStackTrace();
             return false;
         }
+    }
+    
+    // MÉTODOS ADICIONALES PARA COMPATIBILIDAD
+    
+    /**
+     * Método alternativo para obtener cursos por profesor - usa el mismo stored procedure
+     */
+    public List<Curso> obtenerCursosPorProfesor(int profesorId) {
+        return listarPorProfesor(profesorId);
+    }
+    
+    /**
+     * Método alternativo para obtener curso por ID - usa el mismo stored procedure
+     */
+    public Curso obtenerCursoPorId(int cursoId) {
+        return obtenerPorId(cursoId);
     }
 }

@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="modelo.Profesor, modelo.Curso, java.util.List" %>
-<%@ page import="modelo.AsistenciaDAO, java.util.Map" %>
+<%@ page import="modelo.AsistenciaDAO, java.util.Map, java.util.HashMap" %>
 <%
     Profesor docente = (Profesor) session.getAttribute("docente");
     List<Curso> cursos = (List<Curso>) request.getAttribute("misCursos");
@@ -19,13 +19,12 @@
     
     // Obtener estadísticas de asistencias para cada curso
     AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
-    Map<Integer, Map<String, Object>> estadisticasCursos = new java.util.HashMap<>();
+    Map<Integer, Map<String, Object>> estadisticasCursos = new HashMap<>();
     
+    // Por ahora datos de ejemplo - en producción conectar con BD
     if (cursos != null && !cursos.isEmpty()) {
         for (Curso curso : cursos) {
-            // Por ahora usaremos datos de ejemplo
-            // En una implementación real, aquí llamarías a un método del DAO
-            Map<String, Object> stats = new java.util.HashMap<>();
+            Map<String, Object> stats = new HashMap<>();
             stats.put("totalAlumnos", 25);
             stats.put("presentesHoy", 22);
             stats.put("ausentesHoy", 3);
@@ -33,6 +32,17 @@
             
             estadisticasCursos.put(curso.getId(), stats);
         }
+    }
+    
+    // Manejar mensajes de éxito o error
+    String mensaje = (String) session.getAttribute("mensaje");
+    String error = (String) session.getAttribute("error");
+    
+    if (mensaje != null) {
+        session.removeAttribute("mensaje");
+    }
+    if (error != null) {
+        session.removeAttribute("error");
     }
 %>
 
@@ -120,6 +130,22 @@
         </div>
 
         <div class="container mt-5">
+            
+            <!-- Mostrar mensajes -->
+            <% if (mensaje != null) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> <%= mensaje %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% } %>
+            
+            <% if (error != null) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% } %>
+            
             <h2 class="text-center fw-bold mb-5">
                 <i class="bi bi-speedometer2"></i> Panel del Docente
             </h2>

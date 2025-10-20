@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
 public class Curso {
@@ -14,7 +10,20 @@ public class Curso {
     private int profesorId;
     private String gradoNombre;
     private String profesorNombre;
+    private String nivel;
 
+    // Constructores
+    public Curso() {}
+    
+    public Curso(int id, String nombre, int gradoId, int profesorId, int creditos) {
+        this.id = id;
+        this.nombre = nombre;
+        this.gradoId = gradoId;
+        this.profesorId = profesorId;
+        this.creditos = creditos;
+    }
+
+    // Getters y Setters
     public int getId() {
         return id;
     }
@@ -77,5 +86,20 @@ public class Curso {
 
     public void setProfesorNombre(String profesorNombre) {
         this.profesorNombre = profesorNombre;
+    }
+    
+    public String getNivel() {
+        return nivel;
+    }
+    
+    public void setNivel(String nivel) {
+        this.nivel = nivel;
+    }
+
+    @Override
+    public String toString() {
+        return "Curso{" + "id=" + id + ", nombre=" + nombre + ", gradoId=" + gradoId + 
+               ", profesorId=" + profesorId + ", creditos=" + creditos + 
+               ", gradoNombre=" + gradoNombre + ", profesorNombre=" + profesorNombre + '}';
     }
 }
