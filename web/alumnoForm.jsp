@@ -60,7 +60,6 @@
                 <input type="date" class="form-control" name="fecha_nacimiento" value="<%= editar ? a.getFechaNacimiento() : ""%>" required>
             </div>
 
-            <!-- NUEVO CAMPO: Selección de Grado -->
             <div class="mb-3">
                 <label class="form-label">Grado/Salón:</label>
                 <select name="grado_id" class="form-select" required>

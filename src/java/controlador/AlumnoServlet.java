@@ -10,7 +10,7 @@ import modelo.Alumno;
 import modelo.AlumnoDAO;
 import modelo.GradoDAO;
 
-// ❌ ELIMINA ESTA LÍNEA: @WebServlet("/AlumnoServlet")
+// ❌ ELIMINA ESTA LÍNEA: @WebServlet("/AlumnoServlet")s
 public class AlumnoServlet extends HttpServlet {
 
     AlumnoDAO dao = new AlumnoDAO();

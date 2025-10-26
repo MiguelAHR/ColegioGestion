@@ -20,231 +20,103 @@ public class LoginServlet extends HttpServlet {
     private static final int TIEMPO_BLOQUEO_MINUTOS = 1;
     private UsuarioDAO usuarioDAO = new UsuarioDAO();
 
-    // ✅ CAPTCHA activado
-    private static final boolean CAPTCHA_ACTIVADO = true;
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // ✅ FIJAR CODIFICACIÓN UTF-8 AL INICIO
+        // ✅ FIJAR CODIFICACIÓN UTF-8
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=UTF-8");
-
-        System.out.println("=========================================");
-        System.out.println("🎯 MÉTODO doPost INICIADO - DEBUG COMPLETO");
-        
-        // DEBUG: Mostrar todos los parámetros recibidos
-        System.out.println("🔍 TODOS LOS PARÁMETROS RECIBIDOS:");
-        java.util.Enumeration<String> parameterNames = request.getParameterNames();
-        while (parameterNames.hasMoreElements()) {
-            String paramName = parameterNames.nextElement();
-            String paramValue = request.getParameter(paramName);
-            System.out.println("   📌 " + paramName + " = '" + paramValue + "'");
-        }
 
         String user = request.getParameter("username");
         String pass = request.getParameter("password");
         String captchaInput = request.getParameter("captchaInput");
         String captchaHidden = request.getParameter("captchaHidden");
 
-        System.out.println("🔍 VALORES EXTRAÍDOS:");
-        System.out.println("   - username: '" + user + "'");
-        System.out.println("   - password: '" + (pass != null ? "***" + pass.length() + " chars***" : "null") + "'");
-        System.out.println("   - captchaInput: '" + captchaInput + "'");
-        System.out.println("   - captchaHidden: '" + captchaHidden + "'");
+        System.out.println("🔐 Intento de login con usuario: " + user);
 
         try {
-            // ✅ VALIDACIÓN CAPTCHA MEJORADA
-            if (CAPTCHA_ACTIVADO) {
-                System.out.println("🔍 Validando CAPTCHA...");
-                
-                if (captchaHidden == null || captchaInput == null) {
-                    System.out.println("❌ CAPTCHA NULL - Hidden: " + (captchaHidden == null) + ", Input: " + (captchaInput == null));
-                    String errorJson = "{\"success\": false, \"error\": \"Código de verificación requerido\"}";
-                    System.out.println("📤 Enviando respuesta: " + errorJson);
-                    response.getWriter().write(errorJson);
-                    return;
-                }
-                
-                String cleanedHidden = captchaHidden.trim().replaceAll("\\s+", "");
-                String cleanedInput = captchaInput.trim().replaceAll("\\s+", "");
-                
-                System.out.println("   - CaptchaHidden (cleaned): '" + cleanedHidden + "'");
-                System.out.println("   - CaptchaInput (cleaned): '" + cleanedInput + "'");
-                System.out.println("   - Longitud Hidden: " + cleanedHidden.length());
-                System.out.println("   - Longitud Input: " + cleanedInput.length());
-                System.out.println("   - Son iguales: " + cleanedHidden.equals(cleanedInput));
-                
-                if (!cleanedHidden.equals(cleanedInput)) {
-                    System.out.println("❌ CAPTCHA INCORRECTO - Acceso denegado");
-                    String errorJson = "{\"success\": false, \"error\": \"Código de verificación incorrecto\"}";
-                    System.out.println("📤 Enviando respuesta: " + errorJson);
-                    response.getWriter().write(errorJson);
-                    return;
-                } else {
-                    System.out.println("✅ CAPTCHA VALIDADO CORRECTAMENTE");
-                }
-            } else {
-                System.out.println("⚠️  CAPTCHA DESACTIVADO");
-            }
-
-            // 1. Desbloquear usuarios expirados
-            System.out.println("🔄 Desbloqueando usuarios expirados...");
+            // Primero, desbloquear usuarios expirados
             usuarioDAO.desbloquearUsuariosExpirados(TIEMPO_BLOQUEO_MINUTOS);
             
-            // 2. Verificar si el usuario está bloqueado
-            System.out.println("🔍 Verificando estado de bloqueo para: " + user);
+            // Verificar si el usuario está bloqueado en la base de datos
             if (usuarioDAO.estaBloqueado(user)) {
-                System.out.println("🚫 USUARIO BLOQUEADO EN BD: " + user);
+                System.out.println("🚫 Usuario bloqueado en BD: " + user);
                 
                 long tiempoRestante = calcularTiempoRestanteBloqueo(user);
-                System.out.println("⏰ Tiempo restante bloqueo: " + tiempoRestante + "ms");
-                
-                String errorJson = "{\"success\": false, \"error\": \"Usuario bloqueado. Intente más tarde.\"}";
-                System.out.println("📤 Enviando respuesta: " + errorJson);
-                response.getWriter().write(errorJson);
+                String json = "{\"success\": false, \"error\": \"Usuario bloqueado. Intente más tarde.\", \"tipoError\": \"bloqueado\", \"tiempoRestante\": " + tiempoRestante + "}";
+                response.getWriter().write(json);
                 return;
-            } else {
-                System.out.println("✅ Usuario no está bloqueado");
             }
 
-            // 3. VERIFICAR CREDENCIALES CON BCRYPT
-            System.out.println("🔐 Verificando credenciales con BCrypt...");
+            // VERIFICAR CREDENCIALES CON BCRYPT
             boolean credencialesValidas = usuarioDAO.verificarCredenciales(user, pass);
 
             if (credencialesValidas) {
-                System.out.println("✅ CREDENCIALES VÁLIDAS");
+                // ✅ Si las credenciales son correctas, verificar CAPTCHA
+                if (captchaInput == null || captchaHidden == null || !captchaInput.trim().equals(captchaHidden.trim())) {
+                    System.out.println("🛡️ Credenciales correctas, pero CAPTCHA requerido o incorrecto");
+                    String json = "{\"success\": false, \"error\": \"Por favor complete el CAPTCHA\", \"tipoError\": \"requiere_captcha\"}";
+                    response.getWriter().write(json);
+                    return;
+                }
                 
-                // Login exitoso - resetear contadores
+                // Login exitoso - resetear contadores en BD
                 usuarioDAO.resetearIntentosUsuario(user);
-                System.out.println("🔄 Contadores de intentos reseteados");
                 
-                // Obtener el usuario completo
+                // Obtener el usuario completo para la sesión
                 Usuario usuario = usuarioDAO.obtenerPorUsername(user);
-                System.out.println("👤 Usuario obtenido de BD: " + (usuario != null ? "SI" : "NO"));
                 
                 if (usuario != null) {
                     HttpSession session = request.getSession();
                     session.setAttribute("usuario", user);
                     session.setAttribute("rol", usuario.getRol());
 
-                    System.out.println("🎯 Rol detectado: " + usuario.getRol());
-                    System.out.println("💾 Sesión creada - Usuario: " + user + ", Rol: " + usuario.getRol());
+                    System.out.println("✅ Usuario autenticado. Rol: " + usuario.getRol());
 
                     // Determinar redirección según el rol
                     String redirectUrl = determinarRedireccion(usuario.getRol(), user, request, response);
                     
                     if (redirectUrl != null) {
-                        System.out.println("➡️ REDIRIGIENDO A: " + redirectUrl);
-                        String successJson = "{\"success\": true, \"redirect\": \"" + redirectUrl + "\"}";
-                        System.out.println("📤 Enviando respuesta: " + successJson);
-                        response.getWriter().write(successJson);
+                        String json = "{\"success\": true, \"redirect\": \"" + redirectUrl + "\"}";
+                        response.getWriter().write(json);
                     } else {
-                        String errorJson = "{\"success\": false, \"error\": \"No se pudo determinar la redirección\"}";
-                        System.out.println("📤 Enviando respuesta: " + errorJson);
-                        response.getWriter().write(errorJson);
+                        String json = "{\"success\": false, \"error\": \"No se pudo determinar la redirección\", \"tipoError\": \"redireccion\"}";
+                        response.getWriter().write(json);
                     }
                     return;
                     
                 } else {
-                    System.out.println("❌ ERROR: Usuario autenticado pero no encontrado en BD");
-                    String errorJson = "{\"success\": false, \"error\": \"Error del sistema. Contacte al administrador.\"}";
-                    System.out.println("📤 Enviando respuesta: " + errorJson);
-                    response.getWriter().write(errorJson);
+                    String json = "{\"success\": false, \"error\": \"Error del sistema. Contacte al administrador.\", \"tipoError\": \"sistema\"}";
+                    response.getWriter().write(json);
                     return;
                 }
 
             } else {
-                // Login fallido
-                System.out.println("❌ CREDENCIALES INVÁLIDAS");
+                // Login fallido - incrementar intentos en BD
                 usuarioDAO.incrementarIntentoFallido(user);
                 int intentosRestantes = getIntentosRestantes(user);
 
-                System.out.println("📊 Intentos fallidos incrementados. Restantes: " + intentosRestantes);
+                System.out.println("❌ Credenciales inválidas para usuario: " + user
+                        + ". Intentos restantes: " + intentosRestantes);
 
                 if (intentosRestantes <= 0) {
-                    System.out.println("🚫 BLOQUEANDO USUARIO POR MÁXIMOS INTENTOS");
                     usuarioDAO.bloquearUsuario(user);
                     
-                    String errorJson = "{\"success\": false, \"error\": \"Usuario bloqueado por intentos fallidos.\"}";
-                    System.out.println("📤 Enviando respuesta: " + errorJson);
-                    response.getWriter().write(errorJson);
+                    long tiempoRestante = TIEMPO_BLOQUEO_MINUTOS * 60 * 1000;
+                    String json = "{\"success\": false, \"error\": \"Usuario bloqueado por intentos fallidos.\", \"tipoError\": \"bloqueado\", \"tiempoRestante\": " + tiempoRestante + "}";
+                    response.getWriter().write(json);
                 } else {
-                    String errorJson = "{\"success\": false, \"error\": \"Credenciales incorrectas. Intentos restantes: " + intentosRestantes + "\"}";
-                    System.out.println("📤 Enviando respuesta: " + errorJson);
-                    response.getWriter().write(errorJson);
+                    String json = "{\"success\": false, \"error\": \"Credenciales incorrectas\", \"tipoError\": \"credenciales\", \"intentosRestantes\": " + intentosRestantes + "}";
+                    response.getWriter().write(json);
                 }
             }
 
         } catch (Exception e) {
-            System.out.println("💥 ERROR CRÍTICO EN LOGIN:");
+            System.out.println("💥 Error en el login:");
             e.printStackTrace();
-            // ✅ ASEGURAR QUE SIEMPRE SE ENVÍE UNA RESPUESTA
-            try {
-                String errorJson = "{\"success\": false, \"error\": \"Error interno del servidor: " + e.getMessage().replace("\"", "'") + "\"}";
-                System.out.println("📤 Enviando respuesta de error: " + errorJson);
-                response.getWriter().write(errorJson);
-            } catch (Exception ex) {
-                System.out.println("💥 ERROR ENVIANDO RESPUESTA DE ERROR: " + ex.getMessage());
-            }
-        } finally {
-            System.out.println("🏁 FIN PROCESO LOGIN");
-            System.out.println("=========================================");
-        }
-    }
-
-    // Método para determinar la redirección según el rol
-    private String determinarRedireccion(String rol, String user, HttpServletRequest request, HttpServletResponse response) 
-            throws Exception {
-        
-        if ("admin".equalsIgnoreCase(rol)) {
-            System.out.println("➡️ REDIRIGIENDO A DASHBOARD ADMIN");
-            return "dashboard.jsp";
-
-        } else if ("docente".equalsIgnoreCase(rol)) {
-            System.out.println("👨‍🏫 BUSCANDO DOCENTE EN BD...");
-            modelo.Profesor docente = new modelo.ProfesorDAO().obtenerPorUsername(user);
-
-            if (docente != null) {
-                System.out.println("✅ DOCENTE ENCONTRADO: " + docente.getNombres() + " " + docente.getApellidos());
-                System.out.println("🔍 ID Docente: " + docente.getId());
-
-                HttpSession session = request.getSession();
-                session.setAttribute("docente", docente);
-                System.out.println("💾 Docente guardado en sesión");
-
-                // Obtener cursos del docente
-                System.out.println("📚 BUSCANDO CURSOS PARA DOCENTE ID: " + docente.getId());
-                java.util.List<modelo.Curso> misCursos = new modelo.CursoDAO().listarPorProfesor(docente.getId());
-                System.out.println("✅ CURSOS ENCONTRADOS: " + misCursos.size());
-
-                // Guardar cursos en sesión para el dashboard
-                session.setAttribute("misCursos", misCursos);
-                
-                return "docenteDashboard.jsp";
-                
-            } else {
-                System.out.println("❌ NO SE ENCONTRÓ DOCENTE PARA USERNAME: " + user);
-                return "index.jsp?error=sin_docente";
-            }
-            
-        } else if ("padre".equalsIgnoreCase(rol)) {
-            System.out.println("👨‍👧‍👦 BUSCANDO PADRE EN BD...");
-            modelo.Padre padre = new modelo.PadreDAO().obtenerPorUsername(user);
-            
-            if (padre != null) {
-                System.out.println("✅ PADRE ENCONTRADO: " + padre.getAlumnoNombre());
-                request.getSession().setAttribute("padre", padre);
-                return "padreDashboard.jsp";
-            } else {
-                System.out.println("❌ NO SE ENCONTRÓ PADRE PARA USERNAME: " + user);
-                return "index.jsp?error=padre_invalido";
-            }
-            
-        } else {
-            System.out.println("❌ ROL DESCONOCIDO: " + rol);
-            return "index.jsp?error=3";
+            String json = "{\"success\": false, \"error\": \"Error interno del servidor\", \"tipoError\": \"sistema\"}";
+            response.getWriter().write(json);
         }
     }
 
@@ -336,6 +208,60 @@ public class LoginServlet extends HttpServlet {
 
             System.out.println("➡️ Redirigiendo por error sin docente");
             response.sendRedirect("index.jsp?error=sin_docente");
+        }
+    }
+
+    // Método para determinar la redirección según el rol
+    private String determinarRedireccion(String rol, String user, HttpServletRequest request, HttpServletResponse response) 
+            throws Exception {
+        
+        if ("admin".equalsIgnoreCase(rol)) {
+            System.out.println("➡️ REDIRIGIENDO A DASHBOARD ADMIN");
+            return "dashboard.jsp";
+
+        } else if ("docente".equalsIgnoreCase(rol)) {
+            System.out.println("👨‍🏫 BUSCANDO DOCENTE EN BD...");
+            modelo.Profesor docente = new modelo.ProfesorDAO().obtenerPorUsername(user);
+
+            if (docente != null) {
+                System.out.println("✅ DOCENTE ENCONTRADO: " + docente.getNombres() + " " + docente.getApellidos());
+                System.out.println("🔍 ID Docente: " + docente.getId());
+
+                HttpSession session = request.getSession();
+                session.setAttribute("docente", docente);
+                System.out.println("💾 Docente guardado en sesión");
+
+                // Obtener cursos del docente
+                System.out.println("📚 BUSCANDO CURSOS PARA DOCENTE ID: " + docente.getId());
+                java.util.List<modelo.Curso> misCursos = new modelo.CursoDAO().listarPorProfesor(docente.getId());
+                System.out.println("✅ CURSOS ENCONTRADOS: " + misCursos.size());
+
+                // Guardar cursos en sesión para el dashboard
+                session.setAttribute("misCursos", misCursos);
+                
+                return "docenteDashboard.jsp";
+                
+            } else {
+                System.out.println("❌ NO SE ENCONTRÓ DOCENTE PARA USERNAME: " + user);
+                return "index.jsp?error=sin_docente";
+            }
+            
+        } else if ("padre".equalsIgnoreCase(rol)) {
+            System.out.println("👨‍👧‍👦 BUSCANDO PADRE EN BD...");
+            modelo.Padre padre = new modelo.PadreDAO().obtenerPorUsername(user);
+            
+            if (padre != null) {
+                System.out.println("✅ PADRE ENCONTRADO: " + padre.getAlumnoNombre());
+                request.getSession().setAttribute("padre", padre);
+                return "padreDashboard.jsp";
+            } else {
+                System.out.println("❌ NO SE ENCONTRÓ PADRE PARA USERNAME: " + user);
+                return "index.jsp?error=padre_invalido";
+            }
+            
+        } else {
+            System.out.println("❌ ROL DESCONOCIDO: " + rol);
+            return "index.jsp?error=3";
         }
     }
 

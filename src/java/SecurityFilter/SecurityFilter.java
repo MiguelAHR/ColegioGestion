@@ -44,7 +44,7 @@ public class SecurityFilter implements Filter {
                 return;
             }
             
-            if (requestURI.contains("/cursos.jsp") && !rol.equals("docente")) {
+            if (requestURI.contains("/cursos.jsp") && !rol.equals("admin")) {
                 httpResponse.sendRedirect("acceso_denegado.jsp"); 
                 return;
             }
