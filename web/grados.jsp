@@ -36,7 +36,7 @@
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
+
                     <th>Nombre</th>
                     <th>Nivel</th>
                     <th>Acciones</th>
@@ -49,7 +49,7 @@
                         for (Grado g : lista) {
                 %>
                 <tr>
-                    <td><%= g.getId()%></td>
+                    
                     <td><%= g.getNombre()%></td>
                     <td><%= g.getNivel()%></td>
                     <td>

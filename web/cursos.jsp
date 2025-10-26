@@ -66,7 +66,7 @@
         <table class="table table-bordered table-striped table-hover">
             <thead class="table-dark text-center">
                 <tr>
-                    <th>ID</th>
+                   
                     <th>Nombre</th>
                     <th>Créditos</th>
                     <th>Grado</th>
@@ -82,7 +82,7 @@
                         for (Curso c : lista) {
                 %>
                 <tr>
-                    <td><%= c.getId()%></td>
+                 
                     <td><%= c.getNombre()%></td>
                     <td><%= c.getCreditos()%></td>
                     <td><%= c.getGradoNombre() != null ? c.getGradoNombre() : "-"%></td>

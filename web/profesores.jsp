@@ -38,7 +38,7 @@
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
+                   
                     <th>Nombres</th>
                     <th>Apellidos</th>
                     <th>Correo</th>

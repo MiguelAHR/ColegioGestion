@@ -62,7 +62,7 @@
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
+                    
                     <th>Nombres</th>
                     <th>Apellidos</th>
                     <th>Correo</th>
@@ -76,7 +76,7 @@
                     for (Alumno a : lista) {
                 %>
                 <tr>
-                    <td><%= a.getId()%></td>
+                    
                     <td><%= a.getNombres()%></td>
                     <td><%= a.getApellidos()%></td>
                     <td><%= a.getCorreo()%></td>
