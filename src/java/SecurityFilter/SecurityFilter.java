@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package SecurityFilter;
 
 import javax.servlet.*;
@@ -15,175 +11,179 @@ public class SecurityFilter implements Filter {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        
+
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        
-        HttpSession session = httpRequest.getSession(false);
-        
-        if (session != null && session.getAttribute("usuario") != null) {
-            String rol = (String) session.getAttribute("rol"); 
-            String requestURI = httpRequest.getRequestURI(); 
 
-            if (requestURI.contains("/dashboard.jsp") && rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/usuarios.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp");
-            }
-            
-            if (requestURI.contains("/asistenciasDocente.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/docenteDashboard.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/cursos.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/cursoForm.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-             if (requestURI.contains("/grados.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-             
-            if (requestURI.contains("/gradoForm.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            if (requestURI.contains("/justificacionesPadre.jsp") && !rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/albumPadre.jsp") && !rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/alumnoForm.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/asistenciasCurso.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/asistenciasPadre.jsp") && !rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/justificacionesPendientes.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/justificarAusencia.jsp") && !rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/notasDocente.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/notasPadre.jsp") && !rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/notaForm.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            if (requestURI.contains("/observacionesDocente.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/observacionesPadre.jsp") && !rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/profesorForm.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/profesores.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/registrarAsistencia.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/reporteAsistencia.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/tareaForm.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/tareaDocente.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/tareaPadre.jsp") && !rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/uploadImage.jsp") && !rol.equals("padre")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-             if (requestURI.contains("/usuarioForm.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-             
-             if (requestURI.contains("/usuarios.jsp") && !rol.equals("admin")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
-            if (requestURI.contains("/verAlumnos.jsp") && !rol.equals("docente")) {
-                httpResponse.sendRedirect("acceso_denegado.jsp"); 
-                return;
-            }
-            
+        HttpSession session = httpRequest.getSession(false);
+        String requestURI = httpRequest.getRequestURI();
+        String contextPath = httpRequest.getContextPath();
+
+        System.out.println("SecurityFilter: Processing URI: " + requestURI);
+
+        // Excluir páginas públicas y recursos estáticos del filtro
+        if (requestURI.endsWith("login.jsp")
+                || requestURI.endsWith("index.jsp")
+                || requestURI.contains("/LoginServlet")
+                || requestURI.endsWith("acceso_denegado.jsp")
+                || requestURI.contains("/css/")
+                || requestURI.contains("/js/")
+                || requestURI.contains("/images/")
+                || requestURI.contains(".css")
+                || requestURI.contains(".js")
+                || requestURI.contains(".png")
+                || requestURI.contains(".jpg")) {
             chain.doFilter(request, response);
-        } else {
-            httpResponse.sendRedirect("login.jsp");
+            return;
         }
+
+        // Si no hay sesión, redirigir al login
+        if (session == null || session.getAttribute("usuario") == null) {
+            System.out.println("SecurityFilter: No session, redirecting to login");
+            httpResponse.sendRedirect(contextPath + "/login.jsp");
+            return;
+        }
+
+        String rol = (String) session.getAttribute("rol");
+
+        if (rol == null) {
+            System.out.println("SecurityFilter: No role found, redirecting to login");
+            httpResponse.sendRedirect(contextPath + "/login.jsp");
+            return;
+        }
+
+        System.out.println("SecurityFilter: User role: " + rol);
+        System.out.println("SecurityFilter: User role: " + rol + ", URI: " + requestURI);
+        // Verificar permisos según el rol
+        boolean accessGranted = checkAccess(rol, requestURI);
+
+        if (!accessGranted) {
+            System.out.println("SecurityFilter: Access DENIED for role: " + rol + " to: " + requestURI);
+            httpResponse.sendRedirect(contextPath + "/acceso_denegado.jsp");
+            return;
+        }
+
+        System.out.println("SecurityFilter: Access GRANTED for role: " + rol + " to: " + requestURI);
+        chain.doFilter(request, response);
+    }
+
+    private boolean checkAccess(String rol, String requestURI) {
+        System.out.println("SecurityFilter: Checking access for role " + rol + " to " + requestURI);
+        // ADMIN - Acceso completo a funciones administrativas
+        if ("admin".equals(rol)) {
+            return requestURI.contains("/admin/")
+                    || requestURI.contains("/usuarios.jsp")
+                    || requestURI.contains("/usuarioForm.jsp")
+                    || requestURI.contains("/cursos.jsp")
+                    || requestURI.contains("/cursoForm.jsp")
+                    || requestURI.contains("/profesores.jsp")
+                    || requestURI.contains("/profesorForm.jsp")
+                    || requestURI.contains("/gradoForm.jsp")
+                    || requestURI.contains("/alumnoForm.jsp")
+                    || requestURI.contains("/verAlumnos.jsp")
+                    || requestURI.contains("/dashboard.jsp")
+                    || requestURI.contains("/AlumnoServlet")
+                    || requestURI.contains("/ProfesorServlet")
+                    || requestURI.contains("/UsuarioServlet")
+                    || requestURI.contains("/CursoServlet")
+                    || requestURI.contains("/AsistenciaServlet");
+        } // DOCENTE - Solo funciones de docente
+        else if ("docente".equals(rol)) {
+            // Primero verificar que NO sea una página administrativa
+            if (requestURI.contains("/usuarios.jsp")
+                    || requestURI.contains("/usuarioForm.jsp")
+                    || requestURI.contains("/cursos.jsp")
+                    || requestURI.contains("/cursoForm.jsp")
+                    || requestURI.contains("/profesores.jsp")
+                    || requestURI.contains("/profesorForm.jsp")
+                    || requestURI.contains("/gradoForm.jsp")
+                    || requestURI.contains("/alumnoForm.jsp")
+                    || requestURI.contains("/dashboard.jsp")
+                    || requestURI.contains("/admin/")
+                    || requestURI.contains("/AlumnoServlet")
+                    || // ⬅️ QUITA esta línea (ya la quitamos antes)
+                    requestURI.contains("/ProfesorServlet")
+                    || requestURI.contains("/UsuarioServlet")
+                    || requestURI.contains("/CursoServlet")) {   // ⬅️ AGREGA esta línea
+                return false;
+            }
+
+            // Permitir páginas específicas de docente
+            return requestURI.contains("/docente/")
+                    || requestURI.contains("/asistenciasDocente.jsp")
+                    || requestURI.contains("/docenteDashboard.jsp")
+                    || requestURI.contains("/justificacionesPendientes.jsp")
+                    || requestURI.contains("/notasDocente.jsp")
+                    || requestURI.contains("/notaForm.jsp")
+                    || requestURI.contains("/observacionesDocente.jsp")
+                    || requestURI.contains("/registrarAsistencia.jsp")
+                    || requestURI.contains("/reporteAsistencia.jsp")
+                    || requestURI.contains("/tareaForm.jsp")
+                    || requestURI.contains("/tareaDocente.jsp")
+                    || requestURI.contains("/verAlumnos.jsp")
+                    || requestURI.contains("/asistenciasCurso.jsp")
+                    || requestURI.contains("/grados.jsp")
+                    || requestURI.contains("/AsistenciaServlet")
+                    || requestURI.contains("/TareaServlet")
+                    || requestURI.contains("/ObservacionServlet")
+                    || requestURI.contains("/JustificacionServlet")
+                    || requestURI.contains("/AlumnoServlet");  // ⬅️ AGREGA esta línea (ya la agregamos antes)
+        } // PADRE - Solo funciones de padre
+        else if ("padre".equals(rol)) {
+            // Primero verificar que NO sea una página administrativa o de docente
+            if (requestURI.contains("/usuarios.jsp")
+                    || requestURI.contains("/usuarioForm.jsp")
+                    || requestURI.contains("/cursos.jsp")
+                    || requestURI.contains("/cursoForm.jsp")
+                    || requestURI.contains("/profesores.jsp")
+                    || requestURI.contains("/profesorForm.jsp")
+                    || requestURI.contains("/gradoForm.jsp")
+                    || requestURI.contains("/alumnoForm.jsp")
+                    || requestURI.contains("/dashboard.jsp")
+                    || requestURI.contains("/admin/")
+                    || requestURI.contains("/asistenciasDocente.jsp")
+                    || requestURI.contains("/docenteDashboard.jsp")
+                    || requestURI.contains("/justificacionesPendientes.jsp")
+                    || requestURI.contains("/notasDocente.jsp")
+                    || requestURI.contains("/notaForm.jsp")
+                    || requestURI.contains("/observacionesDocente.jsp")
+                    || requestURI.contains("/registrarAsistencia.jsp")
+                    || requestURI.contains("/reporteAsistencia.jsp")
+                    || requestURI.contains("/tareaForm.jsp")
+                    || requestURI.contains("/tareaDocente.jsp")
+                    || requestURI.contains("/verAlumnos.jsp")
+                    || requestURI.contains("/asistenciasCurso.jsp")
+                    || requestURI.contains("/grados.jsp")
+                    || requestURI.contains("/docente/")
+                    || requestURI.contains("/AlumnoServlet")
+                    || requestURI.contains("/ProfesorServlet")
+                    || requestURI.contains("/UsuarioServlet")
+                    || requestURI.contains("/CursoServlet")
+                    || requestURI.contains("/AsistenciaServlet")
+                    || requestURI.contains("/TareaServlet")
+                    || requestURI.contains("/ObservacionServlet")) {
+                return false;
+            }
+
+            // Solo permitir páginas específicas de padre
+            return requestURI.contains("/padre/")
+                    || requestURI.contains("/justificacionesPadre.jsp")
+                    || requestURI.contains("/albumPadre.jsp")
+                    || requestURI.contains("/asistenciasPadre.jsp")
+                    || requestURI.contains("/justificarAusencia.jsp")
+                    || requestURI.contains("/notasPadre.jsp")
+                    || requestURI.contains("/observacionesPadre.jsp")
+                    || requestURI.contains("/tareaPadre.jsp")
+                    || requestURI.contains("/uploadImage.jsp")
+                    || requestURI.contains("/JustificacionServlet")
+                    || requestURI.contains("/NotasPadreServlet")
+                    || requestURI.contains("/ObservacionesPadreServlet")
+                    || requestURI.contains("/TareasPadreServlet");
+        }
+
+        return false;
     }
 
     public void destroy() {
     }
 }
-
