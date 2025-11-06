@@ -1,8 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * SERVLET PARA ELIMINACIÓN DE IMÁGENES DEL ÁLBUM
+ * 
+ * Funcionalidades: Eliminar imágenes del sistema de archivos y BD
+ * Roles: Padre
+ * Integración: Relación con alumno y sistema de archivos
  */
-// src/java/controlador/DeleteImageServlet.java
 package controlador;
 
 import modelo.ImageDAO;
@@ -14,17 +16,23 @@ import java.io.IOException;
 
 @WebServlet("/DeleteImageServlet")
 public class DeleteImageServlet extends HttpServlet {
-  @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException {
-    String idParam = request.getParameter("id");
-    int imgId = idParam != null ? Integer.parseInt(idParam) : 0;
+    
+    /**
+     * 🗑️ MÉTODO POST - ELIMINAR IMAGEN
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String idParam = request.getParameter("id");
+        int imgId = idParam != null ? Integer.parseInt(idParam) : 0;
 
-    // contextPath = ruta absoluta al webapp en disco
-    String contextPath = getServletContext().getRealPath("/");
+        // 📁 OBTENER RUTA ABSOLUTA AL DIRECTORIO DE LA APLICACIÓN
+        String contextPath = getServletContext().getRealPath("/");
 
-    boolean ok = new ImageDAO().eliminarImagen(imgId, contextPath);
-    // Después de borrar volvemos al dashboard del padre
-    response.sendRedirect("albumPadre.jsp");
-  }
+        // 🗑️ ELIMINAR IMAGEN (ARCHIVO Y REGISTRO BD)
+        boolean ok = new ImageDAO().eliminarImagen(imgId, contextPath);
+        
+        // 🔄 REDIRIGIR AL ÁLBUM
+        response.sendRedirect("albumPadre.jsp");
+    }
 }

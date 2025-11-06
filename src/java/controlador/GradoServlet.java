@@ -1,6 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * SERVLET PARA GESTIÓN DE GRADOS ACADÉMICOS
+ * 
+ * Funcionalidades: CRUD completo de grados (niveles educativos)
+ * Roles: Administrador
+ * Integración: Base para cursos y alumnos
  */
 package controlador;
 
@@ -14,60 +17,83 @@ import modelo.GradoDAO;
 @WebServlet("/GradoServlet")
 public class GradoServlet extends HttpServlet {
 
+    // 🎓 DAO PARA OPERACIONES CON LA TABLA DE GRADOS
     GradoDAO dao = new GradoDAO();
 
+    /**
+     * 📖 MÉTODO GET - CONSULTAS Y NAVEGACIÓN DE GRADOS
+     * 
+     * Acciones soportadas:
+     * - listar: Mostrar todos los grados (acción por defecto)
+     * - editar: Formulario para modificar grado existente
+     * - eliminar: Eliminar grado del sistema
+     */
     @Override
-protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    String accion = request.getParameter("accion");
+        String accion = request.getParameter("accion");
 
-    if (accion == null || accion.isEmpty()) {
-        request.setAttribute("lista", dao.listar());
-        request.getRequestDispatcher("grados.jsp").forward(request, response);
-        return;
+        // 📋 ACCIÓN POR DEFECTO: LISTAR TODOS LOS GRADOS
+        if (accion == null || accion.isEmpty()) {
+            request.setAttribute("lista", dao.listar());
+            request.getRequestDispatcher("grados.jsp").forward(request, response);
+            return;
+        }
+
+        // 🎯 EJECUTAR ACCIÓN ESPECÍFICA
+        switch (accion) {
+            case "editar":
+                // ✏️ CARGAR FORMULARIO DE EDICIÓN DE GRADO
+                int idEditar = Integer.parseInt(request.getParameter("id"));
+                Grado g = dao.obtenerPorId(idEditar);
+                request.setAttribute("grado", g);
+                request.getRequestDispatcher("gradoForm.jsp").forward(request, response);
+                break;
+
+            case "eliminar":
+                // 🗑️ ELIMINAR GRADO DEL SISTEMA
+                int idEliminar = Integer.parseInt(request.getParameter("id"));
+                dao.eliminar(idEliminar);
+                response.sendRedirect("GradoServlet");
+                break;
+
+            default:
+                // 🔄 REDIRECCIÓN POR DEFECTO
+                response.sendRedirect("GradoServlet");
+        }
     }
 
-    switch (accion) {
-        case "editar":
-            int idEditar = Integer.parseInt(request.getParameter("id"));
-            Grado g = dao.obtenerPorId(idEditar);
-            request.setAttribute("grado", g);
-            request.getRequestDispatcher("gradoForm.jsp").forward(request, response);
-            break;
-
-        case "eliminar":
-            int idEliminar = Integer.parseInt(request.getParameter("id"));
-            dao.eliminar(idEliminar);
-            response.sendRedirect("GradoServlet");
-            break;
-
-        default:
-            response.sendRedirect("GradoServlet");
-    }
-}
-
-
+    /**
+     * 💾 MÉTODO POST - CREAR Y ACTUALIZAR GRADOS
+     * 
+     * Maneja el envío de formularios para crear nuevos grados
+     * y actualizar grados existentes
+     */
     @Override
-protected void doPost(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
-            ? Integer.parseInt(request.getParameter("id")) : 0;
+        // 📥 DETERMINAR SI ES CREACIÓN (id=0) O ACTUALIZACIÓN (id>0)
+        int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
+                ? Integer.parseInt(request.getParameter("id")) : 0;
 
-    Grado g = new Grado();
-    g.setNombre(request.getParameter("nombre"));
-    g.setNivel(request.getParameter("nivel"));
+        // 🧩 CONSTRUIR OBJETO GRADO CON DATOS DEL FORMULARIO
+        Grado g = new Grado();
+        g.setNombre(request.getParameter("nombre"));
+        g.setNivel(request.getParameter("nivel"));
 
-    if (id == 0) {
-        dao.agregar(g); // o dao.insertar(g);
-    } else {
-        g.setId(id);
-        dao.actualizar(g);
+        // 💾 EJECUTAR OPERACIÓN EN BASE DE DATOS
+        if (id == 0) {
+            dao.agregar(g); // 🆕 CREAR NUEVO GRADO
+            System.out.println("✅ Nuevo grado creado: " + g.getNombre() + " (Nivel: " + g.getNivel() + ")");
+        } else {
+            g.setId(id);
+            dao.actualizar(g); // ✏️ ACTUALIZAR GRADO EXISTENTE
+            System.out.println("✅ Grado actualizado: " + g.getNombre() + " (ID: " + id + ")");
+        }
+
+        // 🔄 REDIRIGIR A LA LISTA PRINCIPAL DE GRADOS
+        response.sendRedirect("GradoServlet");
     }
-
-    response.sendRedirect("GradoServlet");
 }
-
-}
-

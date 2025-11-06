@@ -1,3 +1,10 @@
+/*
+ * SERVLET PARA CARGAR EL DASHBOARD ESPECÍFICO DE DOCENTES
+ * 
+ * Funcionalidades: Cargar cursos del docente y redirigir a dashboard
+ * Roles: Docente
+ * Integración: Relación con cursos y profesores
+ */
 package controlador;
 
 import java.io.IOException;
@@ -15,6 +22,9 @@ import modelo.CursoDAO;
 @WebServlet("/DocenteDashboardServlet")
 public class DocenteDashboardServlet extends HttpServlet {
 
+    /**
+     * 📖 MÉTODO GET - CARGAR DASHBOARD DEL DOCENTE
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -22,7 +32,7 @@ public class DocenteDashboardServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Profesor docente = (Profesor) session.getAttribute("docente");
         
-        // Verificar si el usuario está autenticado y es docente
+        // 🔐 VERIFICAR QUE EL USUARIO ESTÉ AUTENTICADO COMO DOCENTE
         if (docente == null) {
             response.sendRedirect("index.jsp");
             return;
@@ -31,22 +41,23 @@ public class DocenteDashboardServlet extends HttpServlet {
         try {
             System.out.println("🔍 Cargando cursos para profesor ID: " + docente.getId());
             
-            // Cargar los cursos del docente
+            // 📚 CARGAR LOS CURSOS DEL DOCENTE
             CursoDAO cursoDAO = new CursoDAO();
             List<Curso> cursos = cursoDAO.listarPorProfesor(docente.getId());
             
             System.out.println("📊 Cursos encontrados: " + (cursos != null ? cursos.size() : 0));
             
+            // 📝 LOG DETALLADO DE CURSOS
             if (cursos != null) {
                 for (Curso curso : cursos) {
                     System.out.println("   - " + curso.getNombre() + " (Grado: " + curso.getGradoNombre() + ")");
                 }
             }
             
-            // Poner los cursos en el request para que los use el JSP
+            // 📤 PONER LOS CURSOS EN EL REQUEST PARA QUE LOS USE EL JSP
             request.setAttribute("misCursos", cursos);
             
-            // Redirigir al dashboard del docente
+            // 🎯 REDIRIGIR AL DASHBOARD DEL DOCENTE
             request.getRequestDispatcher("docenteDashboard.jsp").forward(request, response);
             
         } catch (Exception e) {

@@ -1,6 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * SERVLET PARA CONSULTA DE ALUMNOS POR GRADO (VISTA PÚBLICA/ADMIN)
+ * 
+ * Funcionalidades: Listar alumnos con filtro por grado
+ * Roles: Admin, Docente (posiblemente)
+ * Integración: Relación con grados
  */
 package controlador;
 
@@ -18,18 +21,25 @@ import java.util.List;
 @WebServlet("/VerAlumnosServlet")
 public class VerAlumnosServlet extends HttpServlet {
 
+    // 🎓 DAO PARA OPERACIONES CON ALUMNOS Y GRADOS
     AlumnoDAO alumnoDAO = new AlumnoDAO();
     GradoDAO gradoDAO = new GradoDAO();
 
+    /**
+     * 📖 MÉTODO GET - LISTAR ALUMNOS CON FILTRO POR GRADO
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        // 📥 OBTENER PARÁMETRO DE FILTRO (OPCIONAL)
         String gradoIdParam = request.getParameter("grado");
 
+        // 🎯 CARGAR LISTA DE GRADOS PARA EL FORMULARIO
         List<Grado> grados = gradoDAO.listar();
         request.setAttribute("grados", grados);
 
+        // 🔍 APLICAR FILTRO SI SE ESPECIFICÓ UN GRADO
         if (gradoIdParam != null && !gradoIdParam.isEmpty()) {
             int gradoId = Integer.parseInt(gradoIdParam);
             List<Alumno> alumnos = alumnoDAO.listarPorGrado(gradoId);
@@ -37,7 +47,7 @@ public class VerAlumnosServlet extends HttpServlet {
             request.setAttribute("gradoSeleccionado", gradoId);
         }
 
+        // 🎯 CARGAR VISTA DE LISTA DE ALUMNOS
         request.getRequestDispatcher("verAlumnos.jsp").forward(request, response);
     }
 }
-

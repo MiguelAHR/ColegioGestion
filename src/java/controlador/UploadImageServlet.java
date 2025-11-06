@@ -1,6 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * SERVLET PARA SUBIDA DE IMÁGENES AL ÁLBUM DEL ALUMNO
+ * 
+ * Funcionalidades: Subir imágenes, almacenar en sistema de archivos y BD
+ * Roles: Padre
+ * Integración: Relación con alumno y sistema de archivos
  */
 package controlador;
 
@@ -21,28 +24,33 @@ import javax.servlet.http.*;
 public class UploadImageServlet extends HttpServlet {
     private static final String UPLOAD_DIR = "uploads";
 
+    /**
+     * 💾 MÉTODO POST - SUBIR IMAGEN AL SERVIDOR
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        // 📥 OBTENER DATOS DEL FORMULARIO
         int alumnoId = Integer.parseInt(req.getParameter("alumno_id"));
         Part filePart = req.getPart("imagen");
         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-        String uniqueName = System.currentTimeMillis() + "_" + fileName;
+        String uniqueName = System.currentTimeMillis() + "_" + fileName; // 🕒 NOMBRE ÚNICO
 
-        // Directorio absoluto
+        // 📁 CREAR DIRECTORIO DE SUBIDAS SI NO EXISTE
         String appPath = req.getServletContext().getRealPath("");
         String uploadPath = appPath + File.separator + UPLOAD_DIR;
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) uploadDir.mkdirs();
 
-        // Escribir el archivo
+        // 💾 ESCRIBIR ARCHIVO EN EL SERVIDOR
         filePart.write(uploadPath + File.separator + uniqueName);
 
-        // Guardar en BD
+        // 💾 GUARDAR RUTA EN BASE DE DATOS
         String dbPath = UPLOAD_DIR + "/" + uniqueName;
         new ImageDAO().guardarImagen(alumnoId, dbPath);
 
+        // 🔄 REDIRIGIR AL ÁLBUM DEL PADRE
         resp.sendRedirect("albumPadre.jsp");
     }
 }

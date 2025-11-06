@@ -1,6 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * SERVLET PARA CONSULTA DE TAREAS DESDE LA VISTA DE PADRES
+ * 
+ * Funcionalidades: Listar tareas del alumno para vista de padres
+ * Roles: Padre
+ * Integración: Relación con alumno y cursos
  */
 package controlador;
 
@@ -15,6 +18,9 @@ import java.util.List;
 
 public class TareasPadreServlet extends HttpServlet {
 
+    /**
+     * 📖 MÉTODO GET - LISTAR TAREAS DEL ALUMNO (VISTA PADRES)
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -22,16 +28,18 @@ public class TareasPadreServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Padre padre = (Padre) session.getAttribute("padre");
 
+        // 🔐 VERIFICAR AUTENTICACIÓN Y DATOS DE PADRE
         if (padre == null) {
             response.sendRedirect("index.jsp");
             return;
         }
 
+        // 📚 OBTENER TAREAS DEL ALUMNO DESDE LA BASE DE DATOS
         TareaDAO dao = new TareaDAO();
         List<Tarea> lista = dao.listarPorAlumno(padre.getAlumnoId());
         request.setAttribute("tareas", lista);
 
+        // 🎯 CARGAR VISTA ESPECÍFICA PARA PADRES
         request.getRequestDispatcher("tareasPadre.jsp").forward(request, response);
     }
 }
-

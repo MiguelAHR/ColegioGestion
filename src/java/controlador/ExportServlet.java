@@ -1,6 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * SERVLET PARA EXPORTACIÓN DE REPORTES EN FORMATOS PDF Y EXCEL
+ * 
+ * Funcionalidades: Exportar notas, tareas y observaciones a PDF/Excel
+ * Roles: Admin, Docente, Padre (según el reporte)
+ * Integración: Uso de Apache POI (Excel) y iText (PDF)
  */
 package controlador;
 
@@ -20,12 +23,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletOutputStream;
 
-// Apache POI para Excel
+// 📈 APACHE POI PARA EXCEL
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 
-// iText 5 para PDF
+// 📄 ITEXT 5 PARA PDF
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -34,6 +37,14 @@ import com.itextpdf.text.pdf.PdfPTable;
 @WebServlet("/ExportServlet")
 public class ExportServlet extends HttpServlet {
 
+    /**
+     * 📖 MÉTODO GET - GENERAR Y DESCARGAR REPORTES
+     * 
+     * Parámetros:
+     * - report: Tipo de reporte (notas, tareas, observaciones)
+     * - type: Formato (pdf, xlsx)
+     * - alumno_id: ID del alumno para filtrar
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -42,7 +53,7 @@ public class ExportServlet extends HttpServlet {
         String alumId = request.getParameter("alumno_id");
         int alumnoId  = alumId != null ? Integer.parseInt(alumId) : 0;
 
-        // Abrimos el stream una vez
+        // 📤 ABRIR STREAM DE RESPUESTA UNA VEZ
         ServletOutputStream out = response.getOutputStream();
         try {
             switch (report) {
@@ -92,10 +103,10 @@ public class ExportServlet extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Reporte desconocido.");
                     return;
             }
-            out.flush();  // aseguramos que todo se envíe
+            out.flush();  // 🚀 ASEGURAR QUE TODO SE ENVÍE
         } catch (Exception ex) {
             ex.printStackTrace();
-            response.reset(); // limpiamos cabeceras/stream
+            response.reset(); // 🧹 LIMPIAR CABECERAS/STREAM
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                                "Error generando el reporte: " + ex.getMessage());
         } finally {
@@ -103,8 +114,11 @@ public class ExportServlet extends HttpServlet {
         }
     }
 
-    // --- Métodos para Excel ---
+    // --- MÉTODOS PARA EXPORTACIÓN A EXCEL (APACHE POI) ---
 
+    /**
+     * 📊 EXPORTAR NOTAS A EXCEL
+     */
     private void exportNotasExcel(List<Nota> lista, ServletOutputStream out) throws IOException {
         XSSFWorkbook wb = new XSSFWorkbook();
         XSSFSheet sheet = wb.createSheet("Notas");
@@ -120,9 +134,12 @@ public class ExportServlet extends HttpServlet {
             row.createCell(2).setCellValue(n.getNota());
         }
         wb.write(out);
-        wb.close();   // cierra solo el Workbook, no el stream
+        wb.close();   // 🚪 CERRAR WORKBOOK, NO EL STREAM
     }
 
+    /**
+     * 📝 EXPORTAR TAREAS A EXCEL
+     */
     private void exportTareasExcel(List<Tarea> lista, ServletOutputStream out) throws IOException {
         XSSFWorkbook wb = new XSSFWorkbook();
         XSSFSheet sheet = wb.createSheet("Tareas");
@@ -145,6 +162,9 @@ public class ExportServlet extends HttpServlet {
         wb.close();
     }
 
+    /**
+     * 📝 EXPORTAR OBSERVACIONES A EXCEL
+     */
     private void exportObsExcel(List<Observacion> lista, ServletOutputStream out) throws IOException {
         XSSFWorkbook wb = new XSSFWorkbook();
         XSSFSheet sheet = wb.createSheet("Observaciones");
@@ -161,8 +181,11 @@ public class ExportServlet extends HttpServlet {
         wb.close();
     }
 
-    // --- Métodos para PDF ---
+    // --- MÉTODOS PARA EXPORTACIÓN A PDF (ITEXT) ---
 
+    /**
+     * 📄 EXPORTAR NOTAS A PDF
+     */
     private void exportNotasPdf(List<Nota> lista, ServletOutputStream out) throws IOException {
         Document doc = new Document();
         try {
@@ -185,6 +208,9 @@ public class ExportServlet extends HttpServlet {
         }
     }
 
+    /**
+     * 📄 EXPORTAR TAREAS A PDF
+     */
     private void exportTareasPdf(List<Tarea> lista, ServletOutputStream out) throws IOException {
         Document doc = new Document();
         try {
@@ -211,6 +237,9 @@ public class ExportServlet extends HttpServlet {
         }
     }
 
+    /**
+     * 📄 EXPORTAR OBSERVACIONES A PDF
+     */
     private void exportObsPdf(List<Observacion> lista, ServletOutputStream out) throws IOException {
         Document doc = new Document();
         try {
@@ -231,4 +260,3 @@ public class ExportServlet extends HttpServlet {
         }
     }
 }
-
