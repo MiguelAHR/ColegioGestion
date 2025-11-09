@@ -1,8 +1,8 @@
 package modelo;
 
 import conexion.Conexion;
-import util.PasswordUtils;  // Importar la clase de utilidades
-import util.ValidacionContraseña; // IMPORTANTE: Agregar este import para validación
+import util.PasswordUtils;
+import util.ValidacionContraseña;
 import java.sql.*;
 import java.util.*;
 
@@ -23,6 +23,7 @@ public class UsuarioDAO {
             }
 
         } catch (Exception e) {
+            System.err.println("❌ Error al listar usuarios: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -31,6 +32,8 @@ public class UsuarioDAO {
 
     // Agregar un usuario usando BCrypt - CON VALIDACIÓN DE CONTRASEÑA FUERTE
     public boolean agregar(Usuario u) {
+        System.out.println("🔍 Intentando agregar usuario: " + u.getUsername());
+        
         // ✅ VALIDAR CONTRASEÑA FUERTE ANTES DE REGISTRAR
         if (!ValidacionContraseña.esPasswordFuerte(u.getPassword())) {
             System.out.println("❌ Contraseña débil - No se puede registrar usuario: " + u.getUsername());
@@ -44,19 +47,57 @@ public class UsuarioDAO {
 
             // ENCRIPTAR LA CONTRASEÑA ANTES DE GUARDAR
             String hashedPassword = PasswordUtils.hashPassword(u.getPassword());
+            System.out.println("🔐 Contraseña hasheada para: " + u.getUsername());
             
             cs.setString(1, u.getUsername());
-            cs.setString(2, hashedPassword); // Guardar contraseña encriptada
+            cs.setString(2, hashedPassword);
             cs.setString(3, u.getRol());
-            cs.executeUpdate();
             
-            System.out.println("✅ Usuario registrado con contraseña fuerte: " + u.getUsername());
-            return true;
+            int resultado = cs.executeUpdate();
+            System.out.println("✅ Usuario registrado con contraseña fuerte: " + u.getUsername() + " - Filas afectadas: " + resultado);
+            return resultado > 0;
 
+        } catch (SQLException e) {
+            System.err.println("❌ Error SQL al agregar usuario " + u.getUsername() + ": " + e.getMessage());
+            
+            // ✅ CORREGIDO: Manejo mejorado de usuario duplicado
+            if (e.getMessage().contains("Duplicate") || e.getMessage().contains("duplicate") 
+                || e.getMessage().contains("UNIQUE") || e.getErrorCode() == 1062) {
+                System.err.println("⚠️ Usuario duplicado detectado: " + u.getUsername());
+                return false;
+            }
+            
+            e.printStackTrace();
+            return false;
         } catch (Exception e) {
+            System.err.println("❌ Error general al agregar usuario " + u.getUsername() + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
+    }
+
+    // ✅ NUEVO MÉTODO: Verificar si un usuario ya existe
+    public boolean existeUsuario(String username) {
+        String sql = "SELECT COUNT(*) FROM usuarios WHERE username = ?";
+        
+        try (Connection con = Conexion.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                System.out.println("🔍 Verificación existencia usuario " + username + ": " + (count > 0 ? "EXISTE" : "NO EXISTE"));
+                return count > 0;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error al verificar existencia de usuario " + username + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
     }
 
     // Obtener un usuario por ID usando un Stored Procedure
@@ -71,9 +112,13 @@ public class UsuarioDAO {
 
             if (rs.next()) {
                 u = mapearUsuario(rs);
+                System.out.println("✅ Usuario encontrado ID " + id + ": " + u.getUsername());
+            } else {
+                System.out.println("⚠️ Usuario no encontrado ID: " + id);
             }
 
         } catch (Exception e) {
+            System.err.println("❌ Error al obtener usuario ID " + id + ": " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -93,10 +138,15 @@ public class UsuarioDAO {
             if (rs.next()) {
                 String hashedPassword = rs.getString("password");
                 // VERIFICAR CONTRASEÑA CON BCRYPT
-                return PasswordUtils.checkPassword(password, hashedPassword);
+                boolean coincide = PasswordUtils.checkPassword(password, hashedPassword);
+                System.out.println("🔐 Verificación credenciales " + username + ": " + (coincide ? "✅ Correctas" : "❌ Incorrectas"));
+                return coincide;
+            } else {
+                System.out.println("⚠️ Usuario no encontrado o inactivo: " + username);
             }
             
         } catch (Exception e) {
+            System.err.println("❌ Error al verificar credenciales para " + username + ": " + e.getMessage());
             e.printStackTrace();
         }
         
@@ -115,9 +165,11 @@ public class UsuarioDAO {
 
             if (rs.next()) {
                 u = mapearUsuario(rs);
+                System.out.println("✅ Usuario obtenido por username: " + username);
             }
 
         } catch (Exception e) {
+            System.err.println("❌ Error al obtener usuario por username " + username + ": " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -141,9 +193,11 @@ public class UsuarioDAO {
                 u.setFechaBloqueo(rs.getTimestamp("fecha_bloqueo"));
                 u.setActivo(rs.getBoolean("activo"));
                 u.setUltimaConexion(rs.getTimestamp("ultima_conexion"));
+                System.out.println("📊 Datos bloqueo obtenidos para: " + username);
             }
 
         } catch (Exception e) {
+            System.err.println("❌ Error al obtener datos bloqueo para " + username + ": " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -161,11 +215,14 @@ public class UsuarioDAO {
             ResultSet rs = cs.executeQuery();
             
             if (rs.next()) {
-                return rs.getBoolean("bloqueado");
+                boolean bloqueado = rs.getBoolean("bloqueado");
+                System.out.println("🔒 Usuario " + username + " bloqueado: " + bloqueado);
+                return bloqueado;
             }
             return false;
             
         } catch (Exception e) {
+            System.err.println("❌ Error al verificar bloqueo para " + username + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -180,9 +237,11 @@ public class UsuarioDAO {
 
             cs.setString(1, username);
             cs.executeUpdate();
+            System.out.println("📈 Intento fallido incrementado para: " + username);
             return true;
 
         } catch (Exception e) {
+            System.err.println("❌ Error al incrementar intento fallido para " + username + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -197,9 +256,11 @@ public class UsuarioDAO {
 
             cs.setString(1, username);
             cs.executeUpdate();
+            System.out.println("🚫 Usuario bloqueado: " + username);
             return true;
 
         } catch (Exception e) {
+            System.err.println("❌ Error al bloquear usuario " + username + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -214,9 +275,11 @@ public class UsuarioDAO {
 
             cs.setString(1, username);
             cs.executeUpdate();
+            System.out.println("🔄 Intentos reseteados para: " + username);
             return true;
 
         } catch (Exception e) {
+            System.err.println("❌ Error al resetear intentos para " + username + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -230,18 +293,23 @@ public class UsuarioDAO {
              CallableStatement cs = con.prepareCall(sql)) {
 
             cs.setInt(1, minutosBloqueo);
-            cs.executeUpdate();
+            int filas = cs.executeUpdate();
+            System.out.println("🔄 Usuarios desbloqueados: " + filas + " (expiración: " + minutosBloqueo + " min)");
             return true;
 
         } catch (Exception e) {
+            System.err.println("❌ Error al desbloquear usuarios expirados: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
 
-    // Actualizar un usuario - ❌ ELIMINADA validación de contraseña fuerte
+    // CORREGIDO: Actualizar un usuario - CON ENCRIPTACIÓN DE CONTRASEÑA
     public boolean actualizar(Usuario u) {
-        String sql = "{CALL actualizar_usuario(?, ?, ?, ?, ?, ?)}";
+        System.out.println("🔍 Actualizando usuario ID: " + u.getId() + ", Username: " + u.getUsername());
+        
+        // ✅ CORREGIDO: Usar solo 4 parámetros que coincidan con el stored procedure
+        String sql = "{CALL actualizar_usuario(?, ?, ?, ?)}";
 
         try (Connection con = Conexion.getConnection();
              CallableStatement cs = con.prepareCall(sql)) {
@@ -249,25 +317,39 @@ public class UsuarioDAO {
             // VERIFICAR SI LA CONTRASEÑA NECESITA SER ENCRIPTADA
             String password = u.getPassword();
             
-            // ❌ ELIMINADO: Validación de contraseña fuerte en actualización
-            // Los usuarios pueden mantener su contraseña actual sin forzar cambios
-            if (password != null && !password.startsWith("$2a$")) {
-                // Es una nueva contraseña (no encriptada) - Se encripta pero no se valida fortaleza
+            if (password != null && !password.isEmpty() && !password.startsWith("$2a$")) {
+                // Es una nueva contraseña (no encriptada) - Se encripta
                 password = PasswordUtils.hashPassword(password);
+                System.out.println("🔐 Nueva contraseña hasheada para actualización");
+            } else if (password == null || password.isEmpty()) {
+                // Si la contraseña está vacía, mantenemos la actual
+                Usuario usuarioActual = obtenerPorId(u.getId());
+                if (usuarioActual != null) {
+                    password = usuarioActual.getPassword();
+                    System.out.println("🔄 Manteniendo contraseña existente del usuario");
+                } else {
+                    System.err.println("❌ No se pudo obtener el usuario actual para mantener la contraseña");
+                    return false;
+                }
             }
 
             cs.setInt(1, u.getId());
             cs.setString(2, u.getUsername());
             cs.setString(3, password);
             cs.setString(4, u.getRol());
-            cs.setInt(5, u.getIntentosFallidos());
-            cs.setBoolean(6, u.isActivo());
-            cs.executeUpdate();
             
-            System.out.println("✅ Usuario actualizado: " + u.getUsername());
-            return true;
+            int resultado = cs.executeUpdate();
+            System.out.println("✅ Usuario actualizado: " + u.getUsername() + " - Filas afectadas: " + resultado);
+            return resultado > 0;
 
+        } catch (SQLException e) {
+            System.err.println("❌ Error SQL al actualizar usuario " + u.getUsername() + ": " + e.getMessage());
+            System.err.println("💡 Código de error SQL: " + e.getErrorCode());
+            System.err.println("📝 Estado SQL: " + e.getSQLState());
+            e.printStackTrace();
+            return false;
         } catch (Exception e) {
+            System.err.println("❌ Error general al actualizar usuario " + u.getUsername() + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -281,11 +363,25 @@ public class UsuarioDAO {
              CallableStatement cs = con.prepareCall(sql)) {
 
             cs.setInt(1, id);
-            cs.executeUpdate();
-            return true;
+            int resultado = cs.executeUpdate();
+            System.out.println("🗑️ Usuario eliminado ID: " + id + " - Filas afectadas: " + resultado);
+            return resultado > 0;
 
         } catch (Exception e) {
+            System.err.println("❌ Error al eliminar usuario ID " + id + ": " + e.getMessage());
             e.printStackTrace();
+            return false;
+        }
+    }
+
+    // ✅ NUEVO MÉTODO: Verificar conexión a la BD
+    public boolean verificarConexion() {
+        try (Connection con = Conexion.getConnection()) {
+            boolean isConnected = con != null && !con.isClosed();
+            System.out.println("🔌 Verificación conexión BD: " + (isConnected ? "✅ CONECTADO" : "❌ DESCONECTADO"));
+            return isConnected;
+        } catch (Exception e) {
+            System.err.println("❌ Error de conexión a BD: " + e.getMessage());
             return false;
         }
     }

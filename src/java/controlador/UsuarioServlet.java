@@ -1,10 +1,3 @@
-/*
- * SERVLET PARA ADMINISTRACIÓN COMPLETA DE USUARIOS DEL SISTEMA
- * 
- * Funcionalidades: CRUD completo de usuarios, validación de contraseñas seguras
- * Roles: Exclusivo para administradores
- * Seguridad: Validación con BCrypt, políticas de contraseñas fuertes
- */
 package controlador;
 
 import javax.servlet.ServletException;
@@ -13,125 +6,226 @@ import javax.servlet.http.*;
 import java.io.IOException;
 import modelo.Usuario;
 import modelo.UsuarioDAO;
-import util.ValidacionContraseña; // 🛡️ UTILITARIO PARA VALIDACIÓN DE CONTRASEÑAS
+import util.ValidacionContraseña;
+import util.PasswordUtils;
 
 @WebServlet("/UsuarioServlet")
 public class UsuarioServlet extends HttpServlet {
 
-    // 👥 DAO PARA OPERACIONES CON LA TABLA DE USUARIOS
-    UsuarioDAO dao = new UsuarioDAO();
+    private UsuarioDAO dao = new UsuarioDAO();
 
-    /**
-     * 📖 MÉTODO GET - CONSULTAS Y NAVEGACIÓN DE USUARIOS
-     * 
-     * Acciones soportadas:
-     * - listar: Mostrar todos los usuarios (acción por defecto)
-     * - editar: Formulario para modificar usuario existente
-     * - eliminar: Eliminar usuario del sistema
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        // Verificar sesión
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("usuario") == null) {
+            response.sendRedirect("index.jsp");
+            return;
+        }
+
         String accion = request.getParameter("accion");
 
-        // 📋 ACCIÓN POR DEFECTO: LISTAR TODOS LOS USUARIOS
         if (accion == null || accion.isEmpty()) {
+            // 📋 LISTAR TODOS LOS USUARIOS
             request.setAttribute("lista", dao.listar());
             request.getRequestDispatcher("usuarios.jsp").forward(request, response);
             return;
         }
 
-        // 🎯 PROCESAR ACCIÓN ESPECÍFICA SOLICITADA
         switch (accion) {
-            case "editar":
-                // ✏️ CARGAR FORMULARIO DE EDICIÓN DE USUARIO
-                int idEditar = Integer.parseInt(request.getParameter("id"));
-                Usuario u = dao.obtenerPorId(idEditar);
-                request.setAttribute("usuario", u);
+            case "nuevo":
+                // 🆕 CARGAR FORMULARIO DE NUEVO USUARIO
                 request.getRequestDispatcher("usuarioForm.jsp").forward(request, response);
+                break;
+                
+            case "editar":
+                // ✏️ CARGAR FORMULARIO DE EDICIÓN
+                try {
+                    int idEditar = Integer.parseInt(request.getParameter("id"));
+                    Usuario u = dao.obtenerPorId(idEditar);
+                    if (u != null) {
+                        request.setAttribute("usuario", u);
+                        request.getRequestDispatcher("usuarioForm.jsp").forward(request, response);
+                    } else {
+                        session.setAttribute("error", "Usuario no encontrado");
+                        response.sendRedirect("UsuarioServlet");
+                    }
+                } catch (NumberFormatException e) {
+                    session.setAttribute("error", "ID de usuario inválido");
+                    response.sendRedirect("UsuarioServlet");
+                }
                 break;
 
             case "eliminar":
-                // 🗑️ ELIMINAR USUARIO DEL SISTEMA
-                int idEliminar = Integer.parseInt(request.getParameter("id"));
-                dao.eliminar(idEliminar);
+                // 🗑️ ELIMINAR USUARIO
+                try {
+                    int idEliminar = Integer.parseInt(request.getParameter("id"));
+                    if (dao.eliminar(idEliminar)) {
+                        session.setAttribute("mensaje", "Usuario eliminado exitosamente");
+                    } else {
+                        session.setAttribute("error", "No se pudo eliminar el usuario");
+                    }
+                } catch (NumberFormatException e) {
+                    session.setAttribute("error", "ID de usuario inválido");
+                }
                 response.sendRedirect("UsuarioServlet");
                 break;
 
             default:
-                // 🔄 REDIRECCIÓN POR DEFECTO SI LA ACCIÓN NO ES RECONOCIDA
                 response.sendRedirect("UsuarioServlet");
         }
     }
 
-    /**
-     * 💾 MÉTODO POST - CREAR Y ACTUALIZAR USUARIOS
-     * 
-     * Diferencias entre crear y actualizar:
-     * - Crear: Requiere contraseña fuerte y validación completa
-     * - Actualizar: Mantiene contraseña actual si no se cambia
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 📥 DETERMINAR SI ES CREACIÓN (id=0) O ACTUALIZACIÓN (id>0)
-        int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
-                ? Integer.parseInt(request.getParameter("id")) : 0;
+        // Verificar sesión
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("usuario") == null) {
+            response.sendRedirect("index.jsp");
+            return;
+        }
 
-        // 🧩 CAPTURAR DATOS DEL FORMULARIO
+        // ✅ VERIFICAR CONEXIÓN A LA BD PRIMERO
+        if (!dao.verificarConexion()) {
+            session.setAttribute("error", "Error de conexión a la base de datos. Contacte al administrador.");
+            response.sendRedirect("UsuarioServlet");
+            return;
+        }
+
+        // Obtener parámetros del formulario
+        String idParam = request.getParameter("id");
         String username = request.getParameter("username");
         String password = request.getParameter("password");
         String rol = request.getParameter("rol");
 
+        System.out.println("🔍 Datos recibidos - ID: " + idParam + ", Username: " + username + ", Rol: " + rol);
+
+        // Validar campos obligatorios
+        if (username == null || username.trim().isEmpty() || rol == null || rol.trim().isEmpty()) {
+            session.setAttribute("error", "Nombre de usuario y rol son obligatorios");
+            response.sendRedirect("UsuarioServlet");
+            return;
+        }
+
+        int id = 0;
+        if (idParam != null && !idParam.trim().isEmpty()) {
+            try {
+                id = Integer.parseInt(idParam);
+            } catch (NumberFormatException e) {
+                session.setAttribute("error", "ID de usuario inválido");
+                response.sendRedirect("UsuarioServlet");
+                return;
+            }
+        }
+
         Usuario u = new Usuario();
-        u.setUsername(username);
-        u.setPassword(password);
-        u.setRol(rol);
+        u.setId(id);
+        u.setUsername(username.trim());
+        u.setRol(rol.trim());
 
         try {
             if (id == 0) {
-                // 🆕 REGISTRAR NUEVO USUARIO - CON VALIDACIÓN ESTRICTA DE CONTRASEÑA
+                // 🆕 REGISTRAR NUEVO USUARIO
+                System.out.println("🆕 Creando nuevo usuario: " + username);
+
+                // ✅ CORREGIDO: Verificar si el usuario ya existe ANTES de intentar crear
+                if (dao.existeUsuario(username.trim())) {
+                    System.out.println("❌ Usuario ya existe: " + username);
+                    session.setAttribute("error", "No se pudo registrar el usuario. El nombre de usuario '" + username + "' ya existe.");
+                    response.sendRedirect("UsuarioServlet");
+                    return;
+                }
+
+                if (password == null || password.trim().isEmpty()) {
+                    session.setAttribute("error", "La contraseña es obligatoria para nuevos usuarios");
+                    response.sendRedirect("UsuarioServlet");
+                    return;
+                }
+
+                // ✅ VALIDAR CONTRASEÑA FUERTE EN EL SERVIDOR
+                if (!ValidacionContraseña.esPasswordFuerte(password)) {
+                    String mensajeError = "No se pudo registrar el usuario. La contraseña debe cumplir con los requisitos de seguridad.";
+                    session.setAttribute("error", mensajeError);
+                    response.sendRedirect("UsuarioServlet");
+                    return;
+                }
+
+                // 🔐 ASIGNAR CONTRASEÑA (será encriptada en el DAO)
+                u.setPassword(password.trim());
+
                 if (dao.agregar(u)) {
-                    request.getSession().setAttribute("mensaje", "Usuario registrado exitosamente");
+                    System.out.println("✅ Usuario creado exitosamente: " + username);
+                    session.setAttribute("mensaje", "Usuario registrado exitosamente");
                 } else {
-                    // ❌ ERROR POR CONTRASEÑA DÉBIL (SOLO EN REGISTRO NUEVO)
-                    String mensajeError = "No se pudo registrar el usuario. " + 
-                                         "La contraseña debe ser fuerte: " + 
-                                         ValidacionContraseña.obtenerRequisitosPassword();
-                    request.getSession().setAttribute("error", mensajeError);
+                    System.out.println("❌ Error al crear usuario: " + username);
+                    session.setAttribute("error", "No se pudo registrar el usuario. Error del sistema.");
                 }
+
             } else {
-                // ✏️ ACTUALIZAR USUARIO EXISTENTE - LÓGICA MÁS FLEXIBLE
-                u.setId(id);
-                
-                // 🔍 OBTENER USUARIO ACTUAL PARA COMPARAR CONTRASEÑAS
+                // ✏️ ACTUALIZAR USUARIO EXISTENTE
+                System.out.println("✏️ Actualizando usuario ID: " + id);
+
                 Usuario usuarioActual = dao.obtenerPorId(id);
-                if (usuarioActual != null) {
-                    // 🔄 MANTENER CONTRASEÑA ACTUAL SI NO SE MODIFICA O ESTÁ VACÍA
-                    if (password == null || password.isEmpty() || password.equals(usuarioActual.getPassword())) {
-                        u.setPassword(usuarioActual.getPassword()); // 🔐 CONSERVAR CONTRASEÑA ACTUAL
-                    }
-                    // 💡 NOTA: En actualizaciones no se valida fortaleza de contraseña por usabilidad
+                if (usuarioActual == null) {
+                    session.setAttribute("error", "Usuario no encontrado");
+                    response.sendRedirect("UsuarioServlet");
+                    return;
                 }
-                
-                // 💾 EJECUTAR ACTUALIZACIÓN EN BASE DE DATOS
-                if (dao.actualizar(u)) {
-                    request.getSession().setAttribute("mensaje", "Usuario actualizado exitosamente");
+
+                // ✅ CORREGIDO: Verificar si el nombre de usuario ya existe (para otro usuario)
+                if (!usuarioActual.getUsername().equals(username.trim())) {
+                    if (dao.existeUsuario(username.trim())) {
+                        System.out.println("❌ Nombre de usuario ya existe: " + username);
+                        session.setAttribute("error", "No se pudo actualizar el usuario. El nombre de usuario '" + username + "' ya existe.");
+                        response.sendRedirect("UsuarioServlet?accion=editar&id=" + id);
+                        return;
+                    }
+                }
+
+                if (password == null || password.trim().isEmpty()) {
+                    // 🔄 MANTENER CONTRASEÑA ACTUAL - pasar null para que el DAO la mantenga
+                    u.setPassword(null);
+                    System.out.println("🔄 Manteniendo contraseña actual para usuario: " + username);
                 } else {
-                    // ❌ ERROR GENÉRICO EN ACTUALIZACIÓN (NO POR CONTRASEÑA DÉBIL)
-                    request.getSession().setAttribute("error", "No se pudo actualizar el usuario. Error del sistema.");
+                    // ✅ VALIDAR NUEVA CONTRASEÑA SI SE PROPORCIONA
+                    if (!ValidacionContraseña.esPasswordFuerte(password)) {
+                        String mensajeError = "No se pudo actualizar el usuario. La nueva contraseña debe cumplir con los requisitos de seguridad.";
+                        session.setAttribute("error", mensajeError);
+                        response.sendRedirect("UsuarioServlet?accion=editar&id=" + id);
+                        return;
+                    }
+
+                    // 🔐 ASIGNAR NUEVA CONTRASEÑA (será encriptada en el DAO)
+                    u.setPassword(password.trim());
+                    System.out.println("🔄 Actualizando contraseña para usuario: " + username);
+                }
+
+                // ✅ DEBUG: Mostrar datos antes de actualizar
+                System.out.println("🔍 DEBUG - Datos del usuario a actualizar:");
+                System.out.println("  ID: " + u.getId());
+                System.out.println("  Username: " + u.getUsername());
+                System.out.println("  Rol: " + u.getRol());
+                System.out.println("  Password proporcionada: " + (u.getPassword() != null ? "SÍ" : "NO (mantener actual)"));
+
+                if (dao.actualizar(u)) {
+                    System.out.println("✅ Usuario actualizado exitosamente: " + username);
+                    session.setAttribute("mensaje", "Usuario actualizado exitosamente");
+                } else {
+                    System.out.println("❌ Error al actualizar usuario: " + username);
+                    session.setAttribute("error", "No se pudo actualizar el usuario. Verifique los datos o contacte al administrador.");
                 }
             }
-            
+
         } catch (Exception e) {
-            // 🚨 CAPTURA DE ERRORES INESPERADOS
+            System.err.println("💥 Error en el servlet UsuarioServlet:");
             e.printStackTrace();
-            request.getSession().setAttribute("error", "Error en el sistema: " + e.getMessage());
+            session.setAttribute("error", "Error en el sistema: " + e.getMessage());
         }
 
-        // 🔄 REDIRIGIR A LA LISTA PRINCIPAL DE USUARIOS
         response.sendRedirect("UsuarioServlet");
     }
 }

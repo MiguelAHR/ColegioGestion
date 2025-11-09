@@ -1,14 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package util;
 import java.util.regex.Pattern;
 
-/**
- *
- * @author Jean
- */
 public class ValidacionContraseña {
     // Patrones para validar la fortaleza de la contraseña
     private static final String MAYUSCULA_PATTERN = ".*[A-Z].*";
@@ -16,12 +8,13 @@ public class ValidacionContraseña {
     private static final String DIGITO_PATTERN = ".*\\d.*";
     private static final String CARACTER_ESPECIAL_PATTERN = ".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*";
     
-    // Configuración de requisitos (puedes ajustar estos valores)
+    // Configuración de requisitos
     private static final int LONGITUD_MINIMA = 8;
     private static final int LONGITUD_MAXIMA = 20;
     
     public static boolean esPasswordFuerte(String password) {
-        if (password == null || password.length() < LONGITUD_MINIMA || password.length() > LONGITUD_MAXIMA) {
+        if (password == null || password.length() < LONGITUD_MINIMA) {
+            System.out.println("❌ Password nulo o longitud insuficiente: " + (password != null ? password.length() : "null"));
             return false;
         }
         
@@ -38,7 +31,13 @@ public class ValidacionContraseña {
         if (tieneDigito) criteriosCumplidos++;
         if (tieneCaracterEspecial) criteriosCumplidos++;
         
-        return criteriosCumplidos >= 3;
+        boolean esFuerte = criteriosCumplidos >= 3;
+        
+        System.out.println("🔐 Validación password - Longitud: " + password.length() + 
+                          ", Criterios: " + criteriosCumplidos + "/4" +
+                          ", Fuerte: " + esFuerte);
+        
+        return esFuerte;
     }
     
     public static String obtenerRequisitosPassword() {
@@ -51,6 +50,7 @@ public class ValidacionContraseña {
                "- Al menos un carácter especial (!@#$%^&* etc.)\n" +
                "- Cumplir al menos 3 de los 4 criterios anteriores";
     }   
+    
     // Método adicional para obtener detalles de validación
     public static String obtenerDetallesValidacion(String password) {
         if (password == null) return "Contraseña nula";
