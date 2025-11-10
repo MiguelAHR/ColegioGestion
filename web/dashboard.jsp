@@ -1,6 +1,6 @@
 <%-- 
     Document   : dashboard
-    Created on : 1 may. 2025, 1:24:01 p. m.
+    Created on : 1 may. 2025, 1:24:01 p. m.
     Author     : Juan Pablo Amaya
 --%>
 
@@ -18,7 +18,8 @@
     }
 %>
 
-
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
     <title>Panel de Control</title>
@@ -27,8 +28,8 @@
     <link rel="stylesheet" href="assets/css/estilos.css?v=1.2">
     <style>
         .dashboard-card {
-            background-color: #fff9f1; /* más claro que #fff7ed */
-            border: 1px solid #ffe9cc; /* más claro que #ffe0b8 */
+            background-color: #fff9f1;
+            border: 1px solid #ffe9cc;
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
@@ -51,6 +52,13 @@
         .btn-custom:hover {
             background-color: #0d6efd;
             color: #fff;
+        }
+        
+        /* Estilos para reducción de movimiento */
+        .reduce-motion * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
         }
     </style>
 </head>
@@ -146,3 +154,4 @@
     </footer>
 
 </body>
+</html>
