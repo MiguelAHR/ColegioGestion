@@ -62,7 +62,6 @@
             <table class="table table-bordered table-striped">
                 <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
                         <th>Usuario</th>
                         <th>Rol</th>
                         <th>Estado</th>
@@ -72,7 +71,6 @@
                 <tbody>
                     <% for (Usuario u : lista) { %>
                     <tr>
-                        <td><%= u.getId() %></td>
                         <td><%= u.getUsername() %></td>
                         <td><%= u.getRol() %></td>
                         <td>

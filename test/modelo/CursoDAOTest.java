@@ -29,7 +29,7 @@ public class CursoDAOTest {
 
     @Test
     public void testListarPorProfesor() {
-        int profesorId = 5; // ejemplo: Nick Flores
+        int profesorId = 6; // ejemplo: Nick Flores
         List<Curso> cursos = dao.listarPorProfesor(profesorId);
         assertNotNull(cursos);
         System.out.println("👨‍🏫 Cursos dictados por profesor " + profesorId + ": " + cursos.size());

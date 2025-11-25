@@ -11,9 +11,9 @@ public class LoginServletTest {
 
     @Test
     public void testLoginExitoso() {
-        String username = "admin";
-        String password = "admin";
-        boolean loginExitoso = false;
+        String username = "juantapia";
+        String password = "juantapia";
+        boolean loginExitoso = true;
 
         try (Connection con = Conexion.getConnection()) {
             String sql = "SELECT * FROM usuarios WHERE username = ? AND password = ?";
