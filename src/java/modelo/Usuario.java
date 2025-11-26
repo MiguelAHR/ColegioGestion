@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
 import java.util.Date;
@@ -16,7 +12,17 @@ public class Usuario {
     private Date ultimaConexion;
     private boolean activo;
 
-    // Getters y Setters existentes...
+    // Constructores
+    public Usuario() {}
+
+    public Usuario(int id, String username, String password, String rol) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.rol = rol;
+    }
+
+    // Getters y Setters
     public int getId() {
         return id;
     }
@@ -49,7 +55,6 @@ public class Usuario {
         this.rol = rol;
     }
 
-    // Nuevos getters y setters
     public int getIntentosFallidos() {
         return intentosFallidos;
     }

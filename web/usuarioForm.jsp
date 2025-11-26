@@ -13,7 +13,6 @@
     response.setHeader("Pragma", "no-cache");
     response.setDateHeader("Expires", 0);
 
-    // ✅ CORREGIDO: No declarar 'session' nuevamente
     if (session == null || session.getAttribute("usuario") == null) {
         response.sendRedirect("index.jsp");
         return;
@@ -22,7 +21,6 @@
     Usuario u = (Usuario) request.getAttribute("usuario");
     boolean esEditar = u != null;
     
-    // Valores por defecto para evitar null pointers
     String username = "";
     String rol = "";
     int id = 0;
@@ -41,6 +39,8 @@
     <title><%= esEditar ? "Editar Usuario" : "Registrar Usuario"%></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/estilos.css">
+    <!-- ✅ INCLUIR CRYPTO-JS PARA SHA256 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         .requisito-cumplido { color: #28a745; font-weight: 500; }
         .requisito-incumplido { color: #dc3545; }
@@ -84,14 +84,12 @@
     <div class="container mt-4">
         <h2><%= esEditar ? "Editar Usuario" : "Registrar Usuario"%></h2>
         
-        <!-- ✅ INFO DEBUG -->
         <div class="debug-info">
             <strong>Modo:</strong> <%= esEditar ? "EDICIÓN" : "REGISTRO" %> | 
             <strong>Usuario ID:</strong> <%= id %> | 
             <strong>Username:</strong> <%= username %>
         </div>
         
-        <%-- Mostrar mensajes de éxito/error --%>
         <% if (session.getAttribute("mensaje") != null) { %>
             <div class="alert alert-success alert-dismissible fade show">
                 <%= session.getAttribute("mensaje") %>
@@ -131,10 +129,8 @@
                        oninput="validarPasswordEnTiempoReal(this.value)"
                        placeholder="<%= esEditar ? "Dejar vacío para mantener contraseña actual" : "Ingrese una contraseña segura"%>">
                 
-                <!-- ✅ Indicador de fortaleza de contraseña -->
                 <div id="indicadorPassword" class="password-feedback"></div>
                 
-                <!-- ✅ Lista de requisitos detallados -->
                 <div class="requisitos-password mt-2 p-3 border rounded" style="background-color: #f8f9fa; font-size: 0.8em; display: none;" id="requisitosPassword">
                     <strong>Requisitos de contraseña segura:</strong>
                     <ul class="mb-0 mt-2" style="padding-left: 1.2em;">
@@ -171,10 +167,23 @@
             <a href="UsuarioServlet" class="btn btn-secondary">Cancelar</a>
         </form>
     </div>
-    
-    <!-- ✅ Script para validación en tiempo real (para ambos casos) -->
+
+    <!-- ✅ SCRIPT PARA ENCRIPTACIÓN SHA256 -->
     <script>
-        // Textos originales de los requisitos
+        // ✅ FUNCIÓN PARA ENCRIPTAR CON SHA256
+        function encriptarPasswordSHA256(password) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const hashedPassword = CryptoJS.SHA256(password).toString();
+                    console.log("🔐 Contraseña encriptada con SHA256 para formulario usuario:", hashedPassword);
+                    resolve(hashedPassword);
+                } catch (error) {
+                    console.error("❌ Error encriptando con SHA256:", error);
+                    reject(error);
+                }
+            });
+        }
+
         const textosOriginales = {
             reqLongitud: "Mínimo 8 caracteres",
             reqMayuscula: "Al menos una letra mayúscula",
@@ -190,7 +199,6 @@
             const submitBtn = document.getElementById('submitBtn');
             const esEdicion = <%= esEditar %>;
             
-            // Mostrar/ocultar panel de requisitos
             if (password.length > 0) {
                 requisitos.style.display = 'block';
             } else {
@@ -206,21 +214,18 @@
                 return;
             }
             
-            // Validar cada criterio individualmente
             const longitudValida = password.length >= 8;
             const tieneMayuscula = /[A-Z]/.test(password);
             const tieneMinuscula = /[a-z]/.test(password);
             const tieneNumero = /[0-9]/.test(password);
             const tieneEspecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
             
-            // Actualizar visualización de cada requisito
             actualizarRequisito('reqLongitud', longitudValida);
             actualizarRequisito('reqMayuscula', tieneMayuscula);
             actualizarRequisito('reqMinuscula', tieneMinuscula);
             actualizarRequisito('reqNumero', tieneNumero);
             actualizarRequisito('reqEspecial', tieneEspecial);
             
-            // Contar criterios cumplidos (sin incluir longitud)
             let criteriosCumplidos = 0;
             if (tieneMayuscula) criteriosCumplidos++;
             if (tieneMinuscula) criteriosCumplidos++;
@@ -230,13 +235,10 @@
             const criteriosValidos = criteriosCumplidos >= 3;
             actualizarRequisito('reqCriterios', criteriosValidos);
             
-            // Actualizar contador
             document.getElementById('criteriosCumplidos').textContent = criteriosCumplidos;
             
-            // Determinar si la contraseña es válida
             const esFuerte = longitudValida && criteriosValidos;
             
-            // Actualizar indicador principal
             if (esFuerte) {
                 indicador.innerHTML = '<span class="text-success">✅ Contraseña segura - Cumple todos los requisitos</span>';
                 submitBtn.disabled = false;
@@ -274,35 +276,19 @@
             document.getElementById('criteriosCumplidos').textContent = '0';
         }
         
-        // Mostrar/ocultar requisitos al enfocar/desenfocar el campo
-        document.getElementById('passwordInput').addEventListener('focus', function() {
-            if (this.value.length > 0) {
-                document.getElementById('requisitosPassword').style.display = 'block';
-            }
-        });
-        
-        document.getElementById('passwordInput').addEventListener('blur', function() {
-            // Ocultar requisitos después de un tiempo si el campo está vacío
-            if (this.value.length === 0) {
-                setTimeout(() => {
-                    document.getElementById('requisitosPassword').style.display = 'none';
-                }, 500);
-            }
-        });
-        
-        // Validar antes de enviar el formulario
-        document.getElementById('usuarioForm').addEventListener('submit', function(e) {
+        // ✅ MODIFICAR EL ENVÍO DEL FORMULARIO PARA ENCRIPTAR CON SHA256
+        document.getElementById('usuarioForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
             const password = document.getElementById('passwordInput').value;
             const esEdicion = <%= esEditar %>;
             
             if (!esEdicion && password.length === 0) {
-                e.preventDefault();
                 alert('La contraseña es obligatoria para nuevos usuarios');
                 return false;
             }
             
             if (password.length > 0) {
-                // Validar todos los criterios nuevamente
                 const longitudValida = password.length >= 8;
                 const tieneMayuscula = /[A-Z]/.test(password);
                 const tieneMinuscula = /[a-z]/.test(password);
@@ -319,10 +305,34 @@
                 const esFuerte = longitudValida && criteriosValidos;
                 
                 if (!esFuerte) {
-                    e.preventDefault();
                     alert('La contraseña no cumple con los requisitos de seguridad. Revise los criterios indicados.');
                     return false;
                 }
+
+                // ✅ ENCRIPTAR CONTRASEÑA CON SHA256 ANTES DE ENVIAR
+                try {
+                    const hashedPassword = await encriptarPasswordSHA256(password);
+                    document.getElementById('passwordInput').value = hashedPassword;
+                } catch (error) {
+                    alert('Error encriptando la contraseña. Intente nuevamente.');
+                    return false;
+                }
+            }
+            
+            this.submit();
+        });
+
+        document.getElementById('passwordInput').addEventListener('focus', function() {
+            if (this.value.length > 0) {
+                document.getElementById('requisitosPassword').style.display = 'block';
+            }
+        });
+        
+        document.getElementById('passwordInput').addEventListener('blur', function() {
+            if (this.value.length === 0) {
+                setTimeout(() => {
+                    document.getElementById('requisitosPassword').style.display = 'none';
+                }, 500);
             }
         });
     </script>

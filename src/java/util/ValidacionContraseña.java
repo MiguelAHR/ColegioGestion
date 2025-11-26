@@ -2,13 +2,11 @@ package util;
 import java.util.regex.Pattern;
 
 public class ValidacionContraseña {
-    // Patrones para validar la fortaleza de la contraseña
     private static final String MAYUSCULA_PATTERN = ".*[A-Z].*";
     private static final String MINUSCULA_PATTERN = ".*[a-z].*";
     private static final String DIGITO_PATTERN = ".*\\d.*";
     private static final String CARACTER_ESPECIAL_PATTERN = ".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*";
     
-    // Configuración de requisitos
     private static final int LONGITUD_MINIMA = 8;
     private static final int LONGITUD_MAXIMA = 20;
     
@@ -18,13 +16,11 @@ public class ValidacionContraseña {
             return false;
         }
         
-        // Verificar cada criterio
         boolean tieneMayuscula = Pattern.compile(MAYUSCULA_PATTERN).matcher(password).matches();
         boolean tieneMinuscula = Pattern.compile(MINUSCULA_PATTERN).matcher(password).matches();
         boolean tieneDigito = Pattern.compile(DIGITO_PATTERN).matcher(password).matches();
         boolean tieneCaracterEspecial = Pattern.compile(CARACTER_ESPECIAL_PATTERN).matcher(password).matches();
         
-        // Requerir al menos 3 de los 4 criterios
         int criteriosCumplidos = 0;
         if (tieneMayuscula) criteriosCumplidos++;
         if (tieneMinuscula) criteriosCumplidos++;
@@ -51,7 +47,6 @@ public class ValidacionContraseña {
                "- Cumplir al menos 3 de los 4 criterios anteriores";
     }   
     
-    // Método adicional para obtener detalles de validación
     public static String obtenerDetallesValidacion(String password) {
         if (password == null) return "Contraseña nula";
         

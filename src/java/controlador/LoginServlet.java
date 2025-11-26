@@ -1,9 +1,3 @@
-/*
- * SERVLET DE AUTENTICACIÓN Y GESTIÓN DE SESIONES
- * 
- * Propósito: Manejar el login de usuarios con sistema de seguridad avanzado
- * Características: Límite de intentos, bloqueo temporal, validación CAPTCHA, BCrypt
- */
 package controlador;
 
 import conexion.Conexion;
@@ -17,71 +11,52 @@ import util.ValidacionContraseña;
 
 public class LoginServlet extends HttpServlet {
 
-    // CONFIGURACIÓN DE SEGURIDAD - EVITA ATAQUES POR FUERZA BRUTA
     private static final int MAX_INTENTOS = 3;
     private static final int TIEMPO_BLOQUEO_MINUTOS = 1;
     private UsuarioDAO usuarioDAO = new UsuarioDAO();
 
-    /**
-     * MÉTODO POST - PROCESA SOLICITUDES DE LOGIN
-     *
-     * Flujo de autenticación: 
-     * 1. Validar formato de entrada 
-     * 2. Verificar bloqueo de usuario 
-     * 3. Autenticar con BCrypt 
-     * 4. Validar CAPTCHA 
-     * 5. Iniciar sesión y redirigir
-     */
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // CONFIGURAR CODIFICACIÓN PARA CARACTERES ESPECIALES
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=UTF-8");
 
-        // CAPTURAR DATOS DEL FORMULARIO DE LOGIN
         String user = request.getParameter("username");
-        String pass = request.getParameter("password");
+        String hashedPasswordFromFrontend = request.getParameter("password");
         String captchaInput = request.getParameter("captchaInput");
         String captchaHidden = request.getParameter("captchaHidden");
 
         System.out.println("Intento de login con usuario: " + user);
+        System.out.println("Contraseña recibida (encriptada): " + (hashedPasswordFromFrontend != null ? "***ENCRIPTADA***" : "null"));
 
         try {
-            // DESBLOQUEAR USUARIOS AUTOMÁTICAMENTE AL EXPIRAR TIEMPO
             usuarioDAO.desbloquearUsuariosExpirados(TIEMPO_BLOQUEO_MINUTOS);
 
-            // VERIFICAR SI EL USUARIO ESTÁ BLOQUEADO
             if (manejarUsuarioBloqueado(user, response)) {
                 return;
             }
 
-            // VERIFICAR CREDENCIALES
-            if (!usuarioDAO.verificarCredenciales(user, pass)) {
+            if (!usuarioDAO.verificarCredencialesConHash(user, hashedPasswordFromFrontend)) {
                 manejarCredencialesInvalidas(user, response);
                 return;
             }
 
-            // VALIDAR CAPTCHA
             if (!validarCaptcha(captchaInput, captchaHidden, response)) {
                 return;
             }
 
-            // OBTENER DATOS DEL USUARIO PARA LA SESIÓN
             Usuario usuario = usuarioDAO.obtenerPorUsername(user);
             if (usuario == null) {
                 enviarJson(response, false, "Error del sistema. Contacte al administrador.", "sistema");
                 return;
             }
 
-            // LOGIN EXITOSO
             usuarioDAO.resetearIntentosUsuario(user);
             HttpSession session = request.getSession();
             session.setAttribute("usuario", user);
             session.setAttribute("rol", usuario.getRol());
 
-            // REDIRIGIR SEGÚN EL ROL DEL USUARIO
             String redirectUrl = determinarRedireccion(usuario.getRol(), user, request, response);
             if (redirectUrl != null) {
                 enviarJson(response, true, redirectUrl);
@@ -96,43 +71,6 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    /**
-     * MÉTODO GET - ENDPOINTS ADICIONALES Y VERIFICACIONES
-     *
-     * Funcionalidades: 
-     * - Verificar estado de bloqueo de usuario 
-     * - Validar fortaleza de contraseña 
-     * - Acceder al dashboard según rol
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("application/json; charset=UTF-8");
-
-        String accion = request.getParameter("accion");
-        HttpSession session = request.getSession();
-
-        System.out.println("GET Request - Acción: " + accion);
-
-        switch (accion != null ? accion : "") {
-            case "verificarBloqueo":
-                verificarBloqueo(request, response);
-                break;
-            case "verificarPassword":
-                verificarPassword(request, response);
-                break;
-            case "dashboard":
-                accederDashboard(session, request, response);
-                break;
-            default:
-                response.sendRedirect("index.jsp");
-        }
-    }
-
-    // --- MÉTODOS AUXILIARES PARA REDUCIR NIVELES DE ANIDAMIENTO ---
     private boolean manejarUsuarioBloqueado(String username, HttpServletResponse response) throws IOException {
         if (!usuarioDAO.estaBloqueado(username)) {
             return false;
@@ -162,6 +100,24 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
+    private int getIntentosRestantes(String username) {
+        Usuario usuario = usuarioDAO.obtenerDatosBloqueo(username);
+        if (usuario != null) {
+            return Math.max(0, MAX_INTENTOS - usuario.getIntentosFallidos());
+        }
+        return MAX_INTENTOS;
+    }
+
+    private long calcularTiempoRestanteBloqueo(String username) {
+        Usuario usuario = usuarioDAO.obtenerDatosBloqueo(username);
+        if (usuario != null && usuario.getFechaBloqueo() != null) {
+            long transcurrido = System.currentTimeMillis() - usuario.getFechaBloqueo().getTime();
+            long total = TIEMPO_BLOQUEO_MINUTOS * 60 * 1000;
+            return Math.max(0, total - transcurrido);
+        }
+        return TIEMPO_BLOQUEO_MINUTOS * 60 * 1000;
+    }
+
     private boolean validarCaptcha(String input, String hidden, HttpServletResponse response) throws IOException {
         if (input != null && hidden != null && input.trim().equals(hidden.trim())) {
             return true;
@@ -181,22 +137,32 @@ public class LoginServlet extends HttpServlet {
         response.getWriter().write("{\"success\": " + success + ", \"error\": \"" + mensaje + "\", \"tipoError\": \"" + tipoError + "\"}");
     }
 
-    private int getIntentosRestantes(String username) {
-        Usuario usuario = usuarioDAO.obtenerDatosBloqueo(username);
-        if (usuario != null) {
-            return Math.max(0, MAX_INTENTOS - usuario.getIntentosFallidos());
-        }
-        return MAX_INTENTOS;
-    }
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    private long calcularTiempoRestanteBloqueo(String username) {
-        Usuario usuario = usuarioDAO.obtenerDatosBloqueo(username);
-        if (usuario != null && usuario.getFechaBloqueo() != null) {
-            long transcurrido = System.currentTimeMillis() - usuario.getFechaBloqueo().getTime();
-            long total = TIEMPO_BLOQUEO_MINUTOS * 60 * 1000;
-            return Math.max(0, total - transcurrido);
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json; charset=UTF-8");
+
+        String accion = request.getParameter("accion");
+        HttpSession session = request.getSession();
+
+        System.out.println("GET Request - Acción: " + accion);
+
+        switch (accion != null ? accion : "") {
+            case "verificarBloqueo":
+                verificarBloqueo(request, response);
+                break;
+            case "verificarPassword":
+                verificarPassword(request, response);
+                break;
+            case "dashboard":
+                accederDashboard(session, request, response);
+                break;
+            default:
+                response.sendRedirect("index.jsp");
         }
-        return TIEMPO_BLOQUEO_MINUTOS * 60 * 1000;
     }
 
     private void verificarBloqueo(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -273,7 +239,6 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("docente", docente);
                 System.out.println("Docente encontrado: " + docente.getNombres() + " " + docente.getApellidos());
 
-                // Cargar cursos del docente
                 java.util.List<modelo.Curso> misCursos = new modelo.CursoDAO().listarPorProfesor(docente.getId());
                 session.setAttribute("misCursos", misCursos);
                 System.out.println("Cursos cargados: " + (misCursos != null ? misCursos.size() : 0));

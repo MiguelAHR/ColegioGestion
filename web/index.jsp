@@ -11,16 +11,14 @@
     String error = request.getParameter("error");
     String intentosParam = request.getParameter("intentos");
     int intentosRestantes = intentosParam != null ? Integer.parseInt(intentosParam) : 3;
-    int intentoActual = 4 - intentosRestantes; // Calcula el intento actual (1, 2 o 3)
+    int intentoActual = 4 - intentosRestantes;
     boolean estaBloqueado = "bloqueado".equals(error);
     
-    // Obtener el tiempo restante directamente del request
     Long tiempoRestanteMs = (Long) request.getAttribute("tiempoRestante");
     if (tiempoRestanteMs == null && estaBloqueado) {
-        tiempoRestanteMs = 60000L; // 1 minuto por defecto
+        tiempoRestanteMs = 60000L;
     }
     
-    // Obtener el username del último intento si está disponible
     String lastUsername = request.getParameter("username");
 %>
 
@@ -31,6 +29,8 @@
         <title>Iniciar Sesión</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="assets/css/estilos.css">
+        <!-- ✅ CRYPTOJS LOCAL -->
+        <script src="assets/js/crypto-js.min.js"></script>
         <style>
             .captcha-modal {
                 display: none;
@@ -124,7 +124,6 @@
         <div class="login-card">
             <h4 class="mb-3 text-center">Iniciar Sesión</h4>
 
-            <!-- Indicador visual de intentos -->
             <% if (!estaBloqueado && "1".equals(error)) { %>
             <div class="intento-indicator">
                 <% for (int i = 1; i <= 3; i++) { %>
@@ -138,9 +137,7 @@
             </div>
             <% } %>
 
-            <!-- Contenedor para mensajes de error -->
             <div id="loginMessages">
-                <!-- Mensajes iniciales del servidor -->
                 <% if (estaBloqueado) { %>
                 <div class="alert alert-danger mt-3">
                     <strong>⚠️ Cuenta temporalmente bloqueada</strong><br>
@@ -245,8 +242,30 @@
         </div>
 
         <script>
+            // ✅ VERIFICAR QUE CRYPTOJS ESTÁ CARGADO
+            console.log("🔍 CryptoJS cargado:", typeof CryptoJS !== "undefined");
+            console.log("🔍 SHA256 disponible:", typeof CryptoJS.SHA256 !== "undefined");
+
             let captchaCode = '';
             let loginData = null;
+
+            // ✅ FUNCIÓN PARA ENCRIPTAR CON SHA256 (LOCAL)
+            function encriptarPasswordSHA256(password) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        if (typeof CryptoJS === 'undefined') {
+                            throw new Error("CryptoJS no está cargado");
+                        }
+                        
+                        const hashedPassword = CryptoJS.SHA256(password).toString();
+                        console.log("🔐 Contraseña encriptada con SHA256 local:", hashedPassword);
+                        resolve(hashedPassword);
+                    } catch (error) {
+                        console.error("❌ Error encriptando con SHA256 local:", error);
+                        reject(error);
+                    }
+                });
+            }
 
             // Generar CAPTCHA
             function generarCaptcha() {
@@ -263,22 +282,19 @@
                 document.getElementById('captchaError').style.display = 'none';
             }
 
-            // Mostrar modal CAPTCHA
             function mostrarCaptcha() {
                 generarCaptcha();
                 document.getElementById('captchaModal').style.display = 'block';
                 document.getElementById('captchaInput').focus();
             }
 
-            // Ocultar modal CAPTCHA
             function ocultarCaptcha() {
                 document.getElementById('captchaModal').style.display = 'none';
             }
 
-            // ✅ FUNCIÓN COMPLETAMENTE CORREGIDA: Mostrar mensajes de error
             function mostrarMensaje(tipo, mensaje, intentosRestantes = null, maxIntentos = 3) {
                 const messagesDiv = document.getElementById('loginMessages');
-                messagesDiv.innerHTML = ''; // Limpiar mensajes anteriores
+                messagesDiv.innerHTML = '';
 
                 let alertClass = 'alert-danger';
                 let icon = '❌';
@@ -289,7 +305,6 @@
                 if (tipo === 'credenciales' && intentosRestantes !== null) {
                     const intentoActual = maxIntentos - intentosRestantes + 1;
                     
-                    // ✅ CORREGIDO: Usar método compatible con JSP
                     let puntosHTML = '';
                     for (let i = 1; i <= maxIntentos; i++) {
                         let clases = 'intento-punto';
@@ -356,13 +371,18 @@
                     progreso;
             }
 
-            // ✅ NUEVA FUNCIÓN: Enviar credenciales sin CAPTCHA primero
-            function enviarCredenciales() {
-                console.log("🚀 Enviando credenciales para verificación...");
+            // ✅ FUNCIÓN PRINCIPAL MODIFICADA PARA ENCRIPTAR CON SHA256
+            async function enviarCredenciales() {
+                console.log("🚀 Enviando credenciales con SHA256 desde frontend...");
 
+                const password = loginData.password;
+                
+                // Encriptar contraseña con SHA256 antes de enviar
+                const hashedPassword = await encriptarPasswordSHA256(password);
+                
                 const params = new URLSearchParams();
                 params.append('username', loginData.username);
-                params.append('password', loginData.password);
+                params.append('password', hashedPassword); // ✅ Enviar ya encriptado
 
                 fetch('LoginServlet', {
                     method: 'POST',
@@ -432,31 +452,19 @@
                 });
             }
 
-            // ✅ NUEVA FUNCIÓN: Validar y enviar CAPTCHA
-            function validarYEnviarCaptcha() {
-                const input = document.getElementById('captchaInput').value.trim();
-
-                if (input === '' || input !== captchaCode) {
-                    document.getElementById('captchaError').style.display = 'block';
-                    document.getElementById('captchaInput').focus();
-                    generarCaptcha();
-                    return;
-                }
-
-                console.log("✅ CAPTCHA correcto - Enviando credenciales con CAPTCHA");
-                ocultarCaptcha();
-                enviarCredencialesConCaptcha();
-            }
-
-            // ✅ NUEVA FUNCIÓN: Enviar credenciales con CAPTCHA
-            function enviarCredencialesConCaptcha() {
+            // ✅ FUNCIÓN PARA ENVIAR CON CAPTCHA
+            async function enviarCredencialesConCaptcha() {
                 console.log("🚀 Enviando credenciales con CAPTCHA...");
 
+                const password = loginData.password;
                 const captchaInputValue = document.getElementById('captchaInput').value.trim();
 
+                // Encriptar contraseña con SHA256
+                const hashedPassword = await encriptarPasswordSHA256(password);
+                
                 const params = new URLSearchParams();
                 params.append('username', loginData.username);
-                params.append('password', loginData.password);
+                params.append('password', hashedPassword);
                 params.append('captchaInput', captchaInputValue);
                 params.append('captchaHidden', captchaCode);
 
@@ -520,7 +528,21 @@
                 });
             }
 
-            // Cancelar login
+            function validarYEnviarCaptcha() {
+                const input = document.getElementById('captchaInput').value.trim();
+
+                if (input === '' || input !== captchaCode) {
+                    document.getElementById('captchaError').style.display = 'block';
+                    document.getElementById('captchaInput').focus();
+                    generarCaptcha();
+                    return;
+                }
+
+                console.log("✅ CAPTCHA correcto - Enviando credenciales con CAPTCHA");
+                ocultarCaptcha();
+                enviarCredencialesConCaptcha();
+            }
+
             function cancelarLogin() {
                 ocultarCaptcha();
                 document.getElementById('loading').style.display = 'none';
@@ -547,7 +569,7 @@
                 document.getElementById('submitBtn').disabled = true;
                 document.getElementById('loading').style.display = 'block';
 
-                // ✅ CORREGIDO: Enviar solo credenciales primero, sin CAPTCHA
+                // ✅ ENVIAR CREDENCIALES CON ENCRIPTACIÓN SHA256
                 enviarCredenciales();
             });
 
@@ -565,6 +587,14 @@
                 <% if (!estaBloqueado) { %>
                     document.getElementById('submitBtn').disabled = false;
                 <% } %>
+                
+                // Verificar que CryptoJS está disponible
+                if (typeof CryptoJS === 'undefined') {
+                    console.error("❌ CRÍTICO: CryptoJS no está cargado");
+                    mostrarMensaje('sistema', 'Error crítico: No se pudo cargar el sistema de seguridad. Recarga la página.');
+                } else {
+                    console.log("✅ CryptoJS cargado correctamente");
+                }
             };
         </script>
 
@@ -627,7 +657,7 @@
 
                 console.log("🚀 Iniciando contador de desbloqueo...");
                 actualizarTiempo();
-                actualizarTiempoDetalle(); // Llamada inicial
+                actualizarTiempoDetalle();
             } else {
                 setInterval(verificarEstadoBloqueo, 5000);
             }
