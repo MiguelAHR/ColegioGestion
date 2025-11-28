@@ -21,8 +21,6 @@ public class UsuarioDAO {
                 // ✅ COMPARACIÓN DIRECTA SHA256 (ambos en SHA256)
                 boolean coincide = hashedPasswordFromFrontend.equals(hashedPasswordInDB);
                 System.out.println("🔐 Verificación SHA256 " + username + ": " + (coincide ? "✅ Correctas" : "❌ Incorrectas"));
-                System.out.println("🔐 Hash recibido: " + hashedPasswordFromFrontend);
-                System.out.println("🔐 Hash en BD: " + hashedPasswordInDB);
                 return coincide;
             } else {
                 System.out.println("⚠️ Usuario no encontrado o inactivo: " + username);
@@ -184,11 +182,11 @@ public class UsuarioDAO {
 
     public Usuario obtenerDatosBloqueo(String username) {
         Usuario u = null;
-        String sql = "{CALL obtener_datos_bloqueo_usuario(?)}";
+        String sql = "SELECT intentos_fallidos, fecha_bloqueo, activo, ultima_conexion FROM usuarios WHERE username = ?";
 
-        try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
-            cs.setString(1, username);
-            ResultSet rs = cs.executeQuery();
+        try (Connection con = Conexion.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
                 u = new Usuario();
@@ -197,7 +195,7 @@ public class UsuarioDAO {
                 u.setFechaBloqueo(rs.getTimestamp("fecha_bloqueo"));
                 u.setActivo(rs.getBoolean("activo"));
                 u.setUltimaConexion(rs.getTimestamp("ultima_conexion"));
-                System.out.println("📊 Datos bloqueo obtenidos para: " + username);
+                System.out.println("📊 Datos bloqueo obtenidos para: " + username + " - Intentos: " + u.getIntentosFallidos() + ", Activo: " + u.isActivo());
             }
 
         } catch (Exception e) {
@@ -209,91 +207,151 @@ public class UsuarioDAO {
     }
 
     public boolean estaBloqueado(String username) {
-        String sql = "{CALL verificar_usuario_bloqueado(?)}";
+        String sql = "SELECT activo, fecha_bloqueo FROM usuarios WHERE username = ?";
 
-        try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
+        try (Connection con = Conexion.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            cs.setString(1, username);
-            ResultSet rs = cs.executeQuery();
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                boolean bloqueado = rs.getBoolean("bloqueado");
-                System.out.println("🔒 Usuario " + username + " bloqueado: " + bloqueado);
+                boolean activo = rs.getBoolean("activo");
+                Timestamp fechaBloqueo = rs.getTimestamp("fecha_bloqueo");
+                
+                // Usuario está bloqueado si activo = false Y tiene fecha de bloqueo
+                boolean bloqueado = !activo && fechaBloqueo != null;
+                System.out.println("🔒 Estado bloqueo " + username + ": activo=" + activo + ", fechaBloqueo=" + fechaBloqueo + ", BLOQUEADO=" + bloqueado);
                 return bloqueado;
             }
-            return false;
 
         } catch (Exception e) {
             System.err.println("❌ Error al verificar bloqueo para " + username + ": " + e.getMessage());
             e.printStackTrace();
-            return false;
         }
+
+        return false;
     }
 
     public boolean incrementarIntentoFallido(String username) {
-        String sql = "{CALL incrementar_intento_fallido(?)}";
+        String sql = "UPDATE usuarios SET intentos_fallidos = intentos_fallidos + 1, ultima_conexion = NOW() WHERE username = ?";
 
-        try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
+        try (Connection con = Conexion.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            cs.setString(1, username);
-            cs.executeUpdate();
-            System.out.println("📈 Intento fallido incrementado para: " + username);
-            return true;
+            ps.setString(1, username);
+            int filasAfectadas = ps.executeUpdate();
+            System.out.println("📈 Intento fallido incrementado para: " + username + " - Filas afectadas: " + filasAfectadas);
+            return filasAfectadas > 0;
 
         } catch (Exception e) {
             System.err.println("❌ Error al incrementar intento fallido para " + username + ": " + e.getMessage());
-            e.printStackTrace();
+            
+            // Fallback: intentar con el procedimiento almacenado
+            try {
+                String sqlFallback = "{CALL incrementar_intento_fallido(?)}";
+                try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sqlFallback)) {
+                    cs.setString(1, username);
+                    cs.executeUpdate();
+                    System.out.println("🔄 Intento fallido incrementado via procedimiento para: " + username);
+                    return true;
+                }
+            } catch (Exception ex) {
+                System.err.println("❌ Error crítico incrementando intentos: " + ex.getMessage());
+            }
+            
             return false;
         }
     }
 
     public boolean bloquearUsuario(String username) {
-        String sql = "{CALL bloquear_usuario(?)}";
+        String sql = "UPDATE usuarios SET activo = 0, fecha_bloqueo = NOW(), intentos_fallidos = 3 WHERE username = ?";
 
-        try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
+        try (Connection con = Conexion.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            cs.setString(1, username);
-            cs.executeUpdate();
-            System.out.println("🚫 Usuario bloqueado: " + username);
-            return true;
+            ps.setString(1, username);
+            int filasAfectadas = ps.executeUpdate();
+            System.out.println("🚫 Usuario bloqueado: " + username + " - Filas afectadas: " + filasAfectadas);
+            return filasAfectadas > 0;
 
         } catch (Exception e) {
             System.err.println("❌ Error al bloquear usuario " + username + ": " + e.getMessage());
-            e.printStackTrace();
+            
+            // Fallback: intentar con el procedimiento almacenado
+            try {
+                String sqlFallback = "{CALL bloquear_usuario(?)}";
+                try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sqlFallback)) {
+                    cs.setString(1, username);
+                    cs.executeUpdate();
+                    System.out.println("🔄 Usuario bloqueado via procedimiento: " + username);
+                    return true;
+                }
+            } catch (Exception ex) {
+                System.err.println("❌ Error crítico bloqueando usuario: " + ex.getMessage());
+            }
+            
             return false;
         }
     }
 
     public boolean resetearIntentosUsuario(String username) {
-        String sql = "{CALL resetear_intentos_usuario(?)}";
+        String sql = "UPDATE usuarios SET intentos_fallidos = 0, fecha_bloqueo = NULL, activo = 1 WHERE username = ?";
 
-        try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
+        try (Connection con = Conexion.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            cs.setString(1, username);
-            cs.executeUpdate();
-            System.out.println("🔄 Intentos reseteados para: " + username);
-            return true;
+            ps.setString(1, username);
+            int filasAfectadas = ps.executeUpdate();
+            System.out.println("🔄 Intentos reseteados para: " + username + " - Filas afectadas: " + filasAfectadas);
+            return filasAfectadas > 0;
 
         } catch (Exception e) {
             System.err.println("❌ Error al resetear intentos para " + username + ": " + e.getMessage());
-            e.printStackTrace();
+            
+            // Fallback: intentar con el procedimiento almacenado
+            try {
+                String sqlFallback = "{CALL resetear_intentos_usuario(?)}";
+                try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sqlFallback)) {
+                    cs.setString(1, username);
+                    cs.executeUpdate();
+                    System.out.println("🔄 Intentos reseteados via procedimiento para: " + username);
+                    return true;
+                }
+            } catch (Exception ex) {
+                System.err.println("❌ Error crítico reseteando intentos: " + ex.getMessage());
+            }
+            
             return false;
         }
     }
 
     public boolean desbloquearUsuariosExpirados(int minutosBloqueo) {
-        String sql = "{CALL desbloquear_usuarios_expirados(?)}";
+        String sql = "UPDATE usuarios SET intentos_fallidos = 0, fecha_bloqueo = NULL, activo = 1 WHERE activo = 0 AND fecha_bloqueo IS NOT NULL AND fecha_bloqueo < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
 
-        try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
+        try (Connection con = Conexion.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            cs.setInt(1, minutosBloqueo);
-            int filas = cs.executeUpdate();
-            System.out.println("🔄 Usuarios desbloqueados: " + filas + " (expiración: " + minutosBloqueo + " min)");
+            ps.setInt(1, minutosBloqueo);
+            int filas = ps.executeUpdate();
+            if (filas > 0) {
+                System.out.println("🔄 Usuarios desbloqueados automáticamente: " + filas + " (expiración: " + minutosBloqueo + " min)");
+            }
             return true;
 
         } catch (Exception e) {
             System.err.println("❌ Error al desbloquear usuarios expirados: " + e.getMessage());
-            e.printStackTrace();
+            
+            // Fallback: intentar con el procedimiento almacenado
+            try {
+                String sqlFallback = "{CALL desbloquear_usuarios_expirados(?)}";
+                try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sqlFallback)) {
+                    cs.setInt(1, minutosBloqueo);
+                    int filas = cs.executeUpdate();
+                    if (filas > 0) {
+                        System.out.println("🔄 Usuarios desbloqueados via procedimiento: " + filas);
+                    }
+                    return true;
+                }
+            } catch (Exception ex) {
+                System.err.println("❌ Error crítico desbloqueando usuarios: " + ex.getMessage());
+            }
+            
             return false;
         }
     }
