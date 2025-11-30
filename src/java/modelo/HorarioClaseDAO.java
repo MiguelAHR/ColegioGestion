@@ -1,6 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE HORARIOS DE CLASES
+ * 
+ * Funcionalidades:
+ * - Consulta de horarios por curso y profesor
+ * - Creacion de nuevos horarios academicos
+ * - Integracion con turnos y aulas
  */
 package modelo;
 
@@ -10,6 +14,13 @@ import java.util.*;
 
 public class HorarioClaseDAO {
 
+    /**
+     * OBTENER HORARIOS POR CURSO Y TURNO
+     * 
+     * @param cursoId Identificador del curso
+     * @param turnoId Identificador del turno
+     * @return Lista de horarios que coinciden con los criterios
+     */
     public List<HorarioClase> obtenerHorariosPorCursoTurno(int cursoId, int turnoId) {
         List<HorarioClase> lista = new ArrayList<>();
         String sql = "{CALL obtener_horarios_por_curso_turno(?, ?)}";
@@ -39,13 +50,20 @@ public class HorarioClaseDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener horarios por curso y turno");
+            System.out.println("Error al obtener horarios por curso y turno");
             e.printStackTrace();
         }
         
         return lista;
     }
 
+    /**
+     * OBTENER HORARIOS POR PROFESOR Y TURNO
+     * 
+     * @param profesorId Identificador del profesor
+     * @param turnoId Identificador del turno
+     * @return Lista de horarios asignados al profesor en el turno especificado
+     */
     public List<HorarioClase> obtenerHorariosPorProfesorTurno(int profesorId, int turnoId) {
         List<HorarioClase> lista = new ArrayList<>();
         String sql = "{CALL obtener_horarios_por_profesor_turno(?, ?)}";
@@ -74,13 +92,19 @@ public class HorarioClaseDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener horarios por profesor y turno");
+            System.out.println("Error al obtener horarios por profesor y turno");
             e.printStackTrace();
         }
         
         return lista;
     }
 
+    /**
+     * CREAR NUEVO HORARIO DE CLASE
+     * 
+     * @param h Objeto HorarioClase con todos los datos necesarios
+     * @return true si la creacion fue exitosa
+     */
     public boolean crearHorarioClase(HorarioClase h) {
         String sql = "{CALL crear_horario_clase(?, ?, ?, ?, ?, ?)}";
         
@@ -97,7 +121,7 @@ public class HorarioClaseDAO {
             return cs.executeUpdate() > 0;
             
         } catch (Exception e) {
-            System.out.println("❌ Error al crear horario de clase");
+            System.out.println("Error al crear horario de clase");
             e.printStackTrace();
             return false;
         }

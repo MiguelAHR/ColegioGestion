@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA EXPORTACIÓN DE REPORTES EN FORMATOS PDF Y EXCEL
+ * SERVLET PARA EXPORTACION DE REPORTES EN FORMATOS PDF Y EXCEL
  * 
  * Funcionalidades: Exportar notas, tareas y observaciones a PDF/Excel
- * Roles: Admin, Docente, Padre (según el reporte)
- * Integración: Uso de Apache POI (Excel) y iText (PDF)
+ * Roles: Admin, Docente, Padre (segun el reporte)
+ * Integracion: Uso de Apache POI (Excel) y iText (PDF)
  */
 package controlador;
 
@@ -23,12 +23,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletOutputStream;
 
-// 📈 APACHE POI PARA EXCEL
+// Apache POI para Excel
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 
-// 📄 ITEXT 5 PARA PDF
+// iText 5 para PDF
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -38,9 +38,9 @@ import com.itextpdf.text.pdf.PdfPTable;
 public class ExportServlet extends HttpServlet {
 
     /**
-     * 📖 MÉTODO GET - GENERAR Y DESCARGAR REPORTES
+     * METODO GET - GENERAR Y DESCARGAR REPORTES
      * 
-     * Parámetros:
+     * Parametros:
      * - report: Tipo de reporte (notas, tareas, observaciones)
      * - type: Formato (pdf, xlsx)
      * - alumno_id: ID del alumno para filtrar
@@ -53,7 +53,7 @@ public class ExportServlet extends HttpServlet {
         String alumId = request.getParameter("alumno_id");
         int alumnoId  = alumId != null ? Integer.parseInt(alumId) : 0;
 
-        // 📤 ABRIR STREAM DE RESPUESTA UNA VEZ
+        // Abrir stream de respuesta una vez
         ServletOutputStream out = response.getOutputStream();
         try {
             switch (report) {
@@ -103,10 +103,10 @@ public class ExportServlet extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Reporte desconocido.");
                     return;
             }
-            out.flush();  // 🚀 ASEGURAR QUE TODO SE ENVÍE
+            out.flush();  // Asegurar que todo se envie
         } catch (Exception ex) {
             ex.printStackTrace();
-            response.reset(); // 🧹 LIMPIAR CABECERAS/STREAM
+            response.reset(); // Limpiar cabeceras/stream
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                                "Error generando el reporte: " + ex.getMessage());
         } finally {
@@ -114,10 +114,10 @@ public class ExportServlet extends HttpServlet {
         }
     }
 
-    // --- MÉTODOS PARA EXPORTACIÓN A EXCEL (APACHE POI) ---
+    // --- METODOS PARA EXPORTACION A EXCEL (APACHE POI) ---
 
     /**
-     * 📊 EXPORTAR NOTAS A EXCEL
+     * EXPORTAR NOTAS A EXCEL
      */
     private void exportNotasExcel(List<Nota> lista, ServletOutputStream out) throws IOException {
         XSSFWorkbook wb = new XSSFWorkbook();
@@ -134,11 +134,11 @@ public class ExportServlet extends HttpServlet {
             row.createCell(2).setCellValue(n.getNota());
         }
         wb.write(out);
-        wb.close();   // 🚪 CERRAR WORKBOOK, NO EL STREAM
+        wb.close();   // Cerrar workbook, no el stream
     }
 
     /**
-     * 📝 EXPORTAR TAREAS A EXCEL
+     * EXPORTAR TAREAS A EXCEL
      */
     private void exportTareasExcel(List<Tarea> lista, ServletOutputStream out) throws IOException {
         XSSFWorkbook wb = new XSSFWorkbook();
@@ -146,7 +146,7 @@ public class ExportServlet extends HttpServlet {
         XSSFRow header = sheet.createRow(0);
         header.createCell(0).setCellValue("Curso");
         header.createCell(1).setCellValue("Nombre");
-        header.createCell(2).setCellValue("Descripción");
+        header.createCell(2).setCellValue("Descripcion");
         header.createCell(3).setCellValue("Fecha Entrega");
         header.createCell(4).setCellValue("Activo");
         int rowNum = 1;
@@ -156,21 +156,21 @@ public class ExportServlet extends HttpServlet {
             row.createCell(1).setCellValue(t.getNombre());
             row.createCell(2).setCellValue(t.getDescripcion());
             row.createCell(3).setCellValue(t.getFechaEntrega());
-            row.createCell(4).setCellValue(t.isActivo() ? "Sí" : "No");
+            row.createCell(4).setCellValue(t.isActivo() ? "Si" : "No");
         }
         wb.write(out);
         wb.close();
     }
 
     /**
-     * 📝 EXPORTAR OBSERVACIONES A EXCEL
+     * EXPORTAR OBSERVACIONES A EXCEL
      */
     private void exportObsExcel(List<Observacion> lista, ServletOutputStream out) throws IOException {
         XSSFWorkbook wb = new XSSFWorkbook();
         XSSFSheet sheet = wb.createSheet("Observaciones");
         XSSFRow header = sheet.createRow(0);
         header.createCell(0).setCellValue("Curso");
-        header.createCell(1).setCellValue("Observación");
+        header.createCell(1).setCellValue("Observacion");
         int rowNum = 1;
         for (Observacion o : lista) {
             XSSFRow row = sheet.createRow(rowNum++);
@@ -181,10 +181,10 @@ public class ExportServlet extends HttpServlet {
         wb.close();
     }
 
-    // --- MÉTODOS PARA EXPORTACIÓN A PDF (ITEXT) ---
+    // --- METODOS PARA EXPORTACION A PDF (ITEXT) ---
 
     /**
-     * 📄 EXPORTAR NOTAS A PDF
+     * EXPORTAR NOTAS A PDF
      */
     private void exportNotasPdf(List<Nota> lista, ServletOutputStream out) throws IOException {
         Document doc = new Document();
@@ -209,7 +209,7 @@ public class ExportServlet extends HttpServlet {
     }
 
     /**
-     * 📄 EXPORTAR TAREAS A PDF
+     * EXPORTAR TAREAS A PDF
      */
     private void exportTareasPdf(List<Tarea> lista, ServletOutputStream out) throws IOException {
         Document doc = new Document();
@@ -219,7 +219,7 @@ public class ExportServlet extends HttpServlet {
             PdfPTable table = new PdfPTable(5);
             table.addCell("Curso");
             table.addCell("Nombre");
-            table.addCell("Descripción");
+            table.addCell("Descripcion");
             table.addCell("Fecha Entrega");
             table.addCell("Activo");
             for (Tarea t : lista) {
@@ -227,7 +227,7 @@ public class ExportServlet extends HttpServlet {
                 table.addCell(t.getNombre());
                 table.addCell(t.getDescripcion());
                 table.addCell(t.getFechaEntrega());
-                table.addCell(t.isActivo() ? "Sí" : "No");
+                table.addCell(t.isActivo() ? "Si" : "No");
             }
             doc.add(table);
         } catch (DocumentException e) {
@@ -238,7 +238,7 @@ public class ExportServlet extends HttpServlet {
     }
 
     /**
-     * 📄 EXPORTAR OBSERVACIONES A PDF
+     * EXPORTAR OBSERVACIONES A PDF
      */
     private void exportObsPdf(List<Observacion> lista, ServletOutputStream out) throws IOException {
         Document doc = new Document();
@@ -247,7 +247,7 @@ public class ExportServlet extends HttpServlet {
             doc.open();
             PdfPTable table = new PdfPTable(2);
             table.addCell("Curso");
-            table.addCell("Observación");
+            table.addCell("Observacion");
             for (Observacion o : lista) {
                 table.addCell(o.getCursoNombre());
                 table.addCell(o.getTexto());

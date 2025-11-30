@@ -1,3 +1,11 @@
+/*
+ * DAO PARA GESTION DE ALUMNOS
+ * 
+ * Funcionalidades:
+ * - CRUD completo de alumnos
+ * - Consultas por grado y curso
+ * - Integracion con sistema academico
+ */
 package modelo;
 
 import conexion.Conexion;
@@ -6,7 +14,12 @@ import java.util.*;
 
 public class AlumnoDAO {
 
-    // Listar los alumnos por grado
+    /**
+     * LISTAR ALUMNOS POR GRADO ACADEMICO
+     * 
+     * @param gradoId Identificador del grado
+     * @return Lista de alumnos pertenecientes al grado especificado
+     */
     public List<Alumno> listarPorGrado(int gradoId) {
         List<Alumno> lista = new ArrayList<>();
         String sql = "{CALL obtener_alumnos_por_grado(?)}";
@@ -30,7 +43,11 @@ public class AlumnoDAO {
         return lista;
     }
 
-    // Listar todos los alumnos
+    /**
+     * LISTAR TODOS LOS ALUMNOS REGISTRADOS
+     * 
+     * @return Lista completa de alumnos
+     */
     public List<Alumno> listar() {
         List<Alumno> lista = new ArrayList<>();
         String sql = "{CALL obtener_alumnos()}";
@@ -52,7 +69,12 @@ public class AlumnoDAO {
         return lista;
     }
 
-    // Agregar un alumno
+    /**
+     * AGREGAR NUEVO ALUMNO
+     * 
+     * @param a Objeto Alumno con datos del nuevo alumno
+     * @return true si el registro fue exitoso
+     */
     public boolean agregar(Alumno a) {
         String sql = "{CALL crear_alumno(?, ?, ?, ?, ?)}";
 
@@ -70,7 +92,12 @@ public class AlumnoDAO {
         }
     }
 
-    // Obtener un alumno por ID
+    /**
+     * OBTENER ALUMNO POR ID
+     * 
+     * @param id Identificador unico del alumno
+     * @return Objeto Alumno con datos completos
+     */
     public Alumno obtenerPorId(int id) {
         Alumno a = new Alumno();
         String sql = "{CALL obtener_alumno_por_id(?)}";
@@ -92,7 +119,12 @@ public class AlumnoDAO {
         return a;
     }
 
-    // Actualizar un alumno
+    /**
+     * ACTUALIZAR DATOS DE ALUMNO EXISTENTE
+     * 
+     * @param a Objeto Alumno con datos actualizados
+     * @return true si la actualizacion fue exitosa
+     */
     public boolean actualizar(Alumno a) {
         String sql = "{CALL actualizar_alumno(?, ?, ?, ?, ?, ?)}";
 
@@ -111,7 +143,12 @@ public class AlumnoDAO {
         }
     }
 
-    // Eliminar un alumno
+    /**
+     * ELIMINAR ALUMNO POR ID
+     * 
+     * @param id Identificador del alumno a eliminar
+     * @return true si la eliminacion fue exitosa
+     */
     public boolean eliminar(int id) {
         String sql = "{CALL eliminar_alumno(?)}";
 
@@ -125,7 +162,12 @@ public class AlumnoDAO {
         }
     }
 
-    // AGREGA ESTE MÉTODO A TU AlumnoDAO.java existente:
+    /**
+     * OBTENER ALUMNOS POR CURSO ESPECIFICO
+     * 
+     * @param cursoId Identificador del curso
+     * @return Lista de alumnos matriculados en el curso
+     */
     public List<Alumno> obtenerAlumnosPorCurso(int cursoId) {
         List<Alumno> lista = new ArrayList<>();
         String sql = "{CALL obtener_alumnos_por_curso(?)}";
@@ -146,16 +188,16 @@ public class AlumnoDAO {
                 lista.add(a);
             }
 
-            System.out.println("✅ Alumnos encontrados para curso " + cursoId + ": " + lista.size());
+            System.out.println("Alumnos encontrados para curso " + cursoId + ": " + lista.size());
 
         } catch (SQLException e) {
-            System.out.println("❌ Error SQL al obtener alumnos por curso:");
-            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("Error SQL al obtener alumnos por curso:");
+            System.out.println("   Codigo: " + e.getErrorCode());
             System.out.println("   Estado: " + e.getSQLState());
             System.out.println("   Mensaje: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("❌ Error general al obtener alumnos por curso");
+            System.out.println("Error general al obtener alumnos por curso");
             e.printStackTrace();
         }
 

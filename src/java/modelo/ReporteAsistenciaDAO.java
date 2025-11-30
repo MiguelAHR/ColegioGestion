@@ -1,6 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GENERACION DE REPORTES DE ASISTENCIA
+ * 
+ * Funcionalidades:
+ * - Reportes mensuales y trimestrales
+ * - Alertas de asistencia baja
+ * - Estadisticas por grado y turno
  */
 package modelo;
 
@@ -10,6 +14,15 @@ import java.util.*;
 
 public class ReporteAsistenciaDAO {
 
+    /**
+     * OBTENER REPORTE DE ASISTENCIA POR GRADO Y TURNO
+     * 
+     * @param gradoId Identificador del grado
+     * @param turnoId Identificador del turno
+     * @param mes Mes del reporte (1-12)
+     * @param anio Ano del reporte
+     * @return Lista de mapas con datos estadisticos de asistencia
+     */
     public List<Map<String, Object>> obtenerReporteAsistenciaGradoTurno(int gradoId, int turnoId, int mes, int anio) {
         List<Map<String, Object>> lista = new ArrayList<>();
         String sql = "{CALL obtener_reporte_asistencia_grado_turno(?, ?, ?, ?)}";
@@ -37,13 +50,20 @@ public class ReporteAsistenciaDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener reporte de asistencia por grado y turno");
+            System.out.println("Error al obtener reporte de asistencia por grado y turno");
             e.printStackTrace();
         }
         
         return lista;
     }
 
+    /**
+     * OBTENER ALERTAS DE ASISTENCIA POR DEBAJO DEL PORCENTAJE MINIMO
+     * 
+     * @param porcentajeMinimo Porcentaje minimo de asistencia requerido
+     * @param turnoId Identificador del turno
+     * @return Lista de alertas con alumnos que no cumplen el porcentaje minimo
+     */
     public List<Map<String, Object>> obtenerAlertasAsistencia(double porcentajeMinimo, int turnoId) {
         List<Map<String, Object>> lista = new ArrayList<>();
         String sql = "{CALL obtener_alertas_asistencia_turno(?, ?)}";
@@ -70,13 +90,22 @@ public class ReporteAsistenciaDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener alertas de asistencia");
+            System.out.println("Error al obtener alertas de asistencia");
             e.printStackTrace();
         }
         
         return lista;
     }
 
+    /**
+     * GENERAR REPORTE TRIMESTRAL DE ASISTENCIA
+     * 
+     * @param gradoId Identificador del grado
+     * @param turnoId Identificador del turno
+     * @param trimestre Trimestre del reporte (1-4)
+     * @param anio Ano del reporte
+     * @return Lista de reportes trimestrales con evaluacion de asistencia
+     */
     public List<Map<String, Object>> generarReporteTrimestral(int gradoId, int turnoId, int trimestre, int anio) {
         List<Map<String, Object>> lista = new ArrayList<>();
         String sql = "{CALL generar_reporte_trimestral_asistencia(?, ?, ?, ?)}";
@@ -107,7 +136,7 @@ public class ReporteAsistenciaDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al generar reporte trimestral");
+            System.out.println("Error al generar reporte trimestral");
             e.printStackTrace();
         }
         

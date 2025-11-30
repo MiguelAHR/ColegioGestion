@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA GESTIÓN DE JUSTIFICACIONES DE AUSENCIAS
+ * SERVLET PARA GESTION DE JUSTIFICACIONES DE AUSENCIAS
  * 
  * Funcionalidades: Crear justificaciones, aprobar/rechazar (admin/docente), consulta padres
  * Roles: Padre (crear), Admin/Docente (aprobar/rechazar), Padre (consulta)
- * Integración: Relación con asistencias, alumnos y padres
+ * Integracion: Relacion con asistencias, alumnos y padres
  */
 package controlador;
 
@@ -23,10 +23,10 @@ import modelo.AsistenciaDAO;
 public class JustificacionServlet extends HttpServlet {
 
     /**
-     * 📖 MÉTODO GET - CONSULTAS Y NAVEGACIÓN DE JUSTIFICACIONES
+     * METODO GET - CONSULTAS Y NAVEGACION DE JUSTIFICACIONES
      * 
      * Acciones soportadas:
-     * - form: Formulario para crear justificación (padres)
+     * - form: Formulario para crear justificacion (padres)
      * - pending: Listar justificaciones pendientes (admin/docente)
      * - list: Listar justificaciones del alumno (padres)
      */
@@ -35,7 +35,7 @@ public class JustificacionServlet extends HttpServlet {
             throws ServletException, IOException {
         String accion = request.getParameter("accion");
         if (accion == null) {
-            accion = "list"; // 🎯 ACCIÓN POR DEFECTO: LISTAR
+            accion = "list"; // Accion por defecto: listar
         }
 
         try {
@@ -61,19 +61,19 @@ public class JustificacionServlet extends HttpServlet {
     }
 
     /**
-     * 💾 MÉTODO POST - CREAR Y GESTIONAR JUSTIFICACIONES
+     * METODO POST - CREAR Y GESTIONAR JUSTIFICACIONES
      * 
      * Acciones soportadas:
-     * - crear: Crear nueva justificación (padres)
-     * - aprobar: Aprobar justificación (admin/docente)
-     * - rechazar: Rechazar justificación (admin/docente)
+     * - crear: Crear nueva justificacion (padres)
+     * - aprobar: Aprobar justificacion (admin/docente)
+     * - rechazar: Rechazar justificacion (admin/docente)
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String accion = request.getParameter("accion");
         if (accion == null) {
-            accion = "crear"; // 🎯 ACCIÓN POR DEFECTO: CREAR
+            accion = "crear"; // Accion por defecto: crear
         }
 
         try {
@@ -99,7 +99,7 @@ public class JustificacionServlet extends HttpServlet {
     }
 
     /**
-     * 📝 MOSTRAR FORMULARIO PARA CREAR JUSTIFICACIÓN
+     * MOSTRAR FORMULARIO PARA CREAR JUSTIFICACION
      * 
      * Carga las ausencias del alumno que pueden ser justificadas
      */
@@ -109,26 +109,26 @@ public class JustificacionServlet extends HttpServlet {
         Padre padre = (Padre) session.getAttribute("padre");
 
         if (padre == null) {
-            System.out.println("❌ ERROR: Padre es null en la sesión");
-            session.setAttribute("error", "Sesión expirada. Por favor inicie sesión nuevamente.");
+            System.out.println("ERROR: Padre es null en la sesion");
+            session.setAttribute("error", "Sesion expirada. Por favor inicie sesion nuevamente.");
             response.sendRedirect("index.jsp");
             return;
         }
 
         try {
-            System.out.println("🔍 Buscando ausencias para alumno_id: " + padre.getAlumnoId());
-            System.out.println("👤 Padre (username): " + padre.getUsername());
-            System.out.println("🎒 Alumno: " + padre.getAlumnoNombre());
+            System.out.println("Buscando ausencias para alumno_id: " + padre.getAlumnoId());
+            System.out.println("Padre (username): " + padre.getUsername());
+            System.out.println("Alumno: " + padre.getAlumnoNombre());
 
-            // 📊 OBTENER AUSENCIAS DEL ALUMNO QUE PUEDEN SER JUSTIFICADAS
+            // Obtener ausencias del alumno que pueden ser justificadas
             AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
             List<Asistencia> ausencias = asistenciaDAO.obtenerAusenciasPorJustificar(padre.getAlumnoId());
 
-            System.out.println("📊 Número de ausencias encontradas: " + ausencias.size());
+            System.out.println("Numero de ausencias encontradas: " + ausencias.size());
             
-            // 📝 LOG DETALLADO DE AUSENCIAS
+            // Log detallado de ausencias
             for (Asistencia a : ausencias) {
-                System.out.println("📅 Ausencia: ID=" + a.getId() + 
+                System.out.println("Ausencia: ID=" + a.getId() + 
                                  ", Fecha=" + a.getFecha() + 
                                  ", Curso=" + a.getCursoNombre() + 
                                  ", Estado=" + a.getEstado());
@@ -139,7 +139,7 @@ public class JustificacionServlet extends HttpServlet {
             request.getRequestDispatcher("justificarAusencia.jsp").forward(request, response);
 
         } catch (Exception e) {
-            System.out.println("❌ ERROR en mostrarFormJustificacion:");
+            System.out.println("ERROR en mostrarFormJustificacion:");
             e.printStackTrace();
             session.setAttribute("error", "Error al cargar las ausencias: " + e.getMessage());
             response.sendRedirect("asistenciasPadre.jsp");
@@ -147,7 +147,7 @@ public class JustificacionServlet extends HttpServlet {
     }
 
     /**
-     * 📋 LISTAR JUSTIFICACIONES PENDIENTES (PARA ADMIN/DOCENTE)
+     * LISTAR JUSTIFICACIONES PENDIENTES (PARA ADMIN/DOCENTE)
      */
     private void listarJustificacionesPendientes(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -158,7 +158,7 @@ public class JustificacionServlet extends HttpServlet {
     }
 
     /**
-     * 📋 LISTAR JUSTIFICACIONES DEL ALUMNO (PARA PADRES)
+     * LISTAR JUSTIFICACIONES DEL ALUMNO (PARA PADRES)
      */
     private void listarJustificaciones(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -175,7 +175,7 @@ public class JustificacionServlet extends HttpServlet {
     }
 
     /**
-     * 💾 CREAR NUEVA JUSTIFICACIÓN
+     * CREAR NUEVA JUSTIFICACION
      */
     private void crearJustificacion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -183,7 +183,7 @@ public class JustificacionServlet extends HttpServlet {
         Padre padre = (Padre) session.getAttribute("padre");
 
         if (padre == null) {
-            session.setAttribute("error", "Sesión expirada. Por favor inicie sesión nuevamente.");
+            session.setAttribute("error", "Sesion expirada. Por favor inicie sesion nuevamente.");
             response.sendRedirect("index.jsp");
             return;
         }
@@ -193,10 +193,10 @@ public class JustificacionServlet extends HttpServlet {
             String tipoJustificacion = request.getParameter("tipo_justificacion");
             String descripcion = request.getParameter("descripcion");
 
-            System.out.println("📝 Creando justificación:");
+            System.out.println("Creando justificacion:");
             System.out.println("   Asistencia ID: " + asistenciaId);
             System.out.println("   Tipo: " + tipoJustificacion);
-            System.out.println("   Descripción: " + descripcion);
+            System.out.println("   Descripcion: " + descripcion);
             System.out.println("   Justificado por: " + padre.getId());
             System.out.println("   Padre username: " + padre.getUsername());
 
@@ -210,26 +210,26 @@ public class JustificacionServlet extends HttpServlet {
             boolean exito = justificacionDAO.crearJustificacion(justificacion);
 
             if (exito) {
-                System.out.println("✅ Justificación creada exitosamente");
-                session.setAttribute("mensaje", "Justificación enviada correctamente");
+                System.out.println("Justificacion creada exitosamente");
+                session.setAttribute("mensaje", "Justificacion enviada correctamente");
                 response.sendRedirect("AsistenciaServlet?accion=verPadre");
             } else {
-                System.out.println("❌ Error al crear justificación");
-                session.setAttribute("error", "Error al enviar la justificación");
+                System.out.println("Error al crear justificacion");
+                session.setAttribute("error", "Error al enviar la justificacion");
                 response.sendRedirect("JustificacionServlet?accion=form");
             }
         } catch (NumberFormatException e) {
-            session.setAttribute("error", "Datos inválidos. Por favor verifique la información.");
+            session.setAttribute("error", "Datos invalidos. Por favor verifique la informacion.");
             response.sendRedirect("JustificacionServlet?accion=form");
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Error interno al procesar la justificación: " + e.getMessage());
+            session.setAttribute("error", "Error interno al procesar la justificacion: " + e.getMessage());
             response.sendRedirect("JustificacionServlet?accion=form");
         }
     }
 
     /**
-     * ✅ APROBAR JUSTIFICACIÓN
+     * APROBAR JUSTIFICACION
      */
     private void aprobarJustificacion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -242,20 +242,20 @@ public class JustificacionServlet extends HttpServlet {
             boolean exito = justificacionDAO.aprobarJustificacion(justificacionId, 1, observaciones);
 
             if (exito) {
-                session.setAttribute("mensaje", "Justificación aprobada correctamente");
+                session.setAttribute("mensaje", "Justificacion aprobada correctamente");
             } else {
-                session.setAttribute("error", "Error al aprobar justificación");
+                session.setAttribute("error", "Error al aprobar justificacion");
             }
             response.sendRedirect("JustificacionServlet?accion=pending");
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Error al procesar la aprobación: " + e.getMessage());
+            session.setAttribute("error", "Error al procesar la aprobacion: " + e.getMessage());
             response.sendRedirect("JustificacionServlet?accion=pending");
         }
     }
 
     /**
-     * ❌ RECHAZAR JUSTIFICACIÓN
+     * RECHAZAR JUSTIFICACION
      */
     private void rechazarJustificacion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -268,9 +268,9 @@ public class JustificacionServlet extends HttpServlet {
             boolean exito = justificacionDAO.rechazarJustificacion(justificacionId, 1, observaciones);
 
             if (exito) {
-                session.setAttribute("mensaje", "Justificación rechazada correctamente");
+                session.setAttribute("mensaje", "Justificacion rechazada correctamente");
             } else {
-                session.setAttribute("error", "Error al rechazar justificación");
+                session.setAttribute("error", "Error al rechazar justificacion");
             }
             response.sendRedirect("JustificacionServlet?accion=pending");
         } catch (Exception e) {

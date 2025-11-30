@@ -1,6 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE PADRES/TUTORES
+ * 
+ * Funcionalidades:
+ * - Consulta de datos de padres por credenciales
+ * - Asociacion con alumnos correspondientes
  */
 package modelo;
 
@@ -9,6 +12,12 @@ import java.sql.*;
 
 public class PadreDAO {
 
+    /**
+     * OBTENER PADRE/TUTOR POR NOMBRE DE USUARIO
+     * 
+     * @param username Nombre de usuario del padre
+     * @return Objeto Padre con datos completos o null si no existe
+     */
     public Padre obtenerPorUsername(String username) {
         Padre p = null;
         String sql = "SELECT u.id, u.username, a.id AS alumno_id, " +
@@ -36,4 +45,3 @@ public class PadreDAO {
         return p;
     }
 }
-

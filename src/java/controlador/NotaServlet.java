@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA GESTIÓN DE CALIFICACIONES ACADÉMICAS
+ * SERVLET PARA GESTION DE CALIFICACIONES ACADEMICAS
  * 
  * Funcionalidades: CRUD completo de notas, registro por tarea y alumno
- * Roles: Docente (gestión completa), Padre (consulta de notas de su hijo)
- * Integración: Relación con tareas, alumnos, cursos y profesores
+ * Roles: Docente (gestion completa), Padre (consulta de notas de su hijo)
+ * Integracion: Relacion con tareas, alumnos, cursos y profesores
  */
 package controlador;
 
@@ -22,17 +22,17 @@ import java.io.IOException;
 @WebServlet("/NotaServlet")
 public class NotaServlet extends HttpServlet {
 
-    // 📊 DAO PARA OPERACIONES CON LA TABLA DE NOTAS
+    // DAO para operaciones con la tabla de notas
     NotaDAO dao = new NotaDAO();
 
     /**
-     * 📖 MÉTODO GET - CONSULTAS Y GESTIÓN DE CALIFICACIONES
+     * METODO GET - CONSULTAS Y GESTION DE CALIFICACIONES
      * 
      * Acciones soportadas:
      * - listar: Mostrar todas las notas de un curso
-     * - nuevo: Formulario para asignar nueva calificación
-     * - editar: Formulario para modificar calificación existente
-     * - eliminar: Eliminar calificación del sistema
+     * - nuevo: Formulario para asignar nueva calificacion
+     * - editar: Formulario para modificar calificacion existente
+     * - eliminar: Eliminar calificacion del sistema
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -43,15 +43,15 @@ public class NotaServlet extends HttpServlet {
         int cursoId;
 
         try {
-            // 📥 OBTENER ID DEL CURSO (PARÁMETRO OBLIGATORIO)
+            // Obtener ID del curso (parametro obligatorio)
             cursoId = Integer.parseInt(request.getParameter("curso_id"));
         } catch (Exception e) {
-            // 🚨 ERROR: REDIRIGIR AL DASHBOARD SI NO HAY CURSO_ID
+            // Error: redirigir al dashboard si no hay curso_id
             response.sendRedirect("docenteDashboard.jsp");
             return;
         }
 
-        // 🔍 VALIDAR QUE EL CURSO EXISTA
+        // Validar que el curso exista
         Curso curso = new CursoDAO().obtenerPorId(cursoId);
         if (curso == null) {
             response.sendRedirect("docenteDashboard.jsp");
@@ -60,23 +60,23 @@ public class NotaServlet extends HttpServlet {
 
         request.setAttribute("curso", curso);
 
-        // 🎯 EJECUTAR ACCIÓN SEGÚN PARÁMETRO (VALOR POR DEFECTO: "listar")
+        // Ejecutar accion segun parametro (valor por defecto: "listar")
         switch (accion == null ? "listar" : accion) {
             case "listar":
-                // 📋 LISTAR TODAS LAS CALIFICACIONES DEL CURSO
+                // Listar todas las calificaciones del curso
                 request.setAttribute("lista", dao.listarPorCurso(cursoId));
                 request.getRequestDispatcher("notasDocente.jsp").forward(request, response);
                 break;
 
             case "nuevo":
-                // ➕ FORMULARIO PARA NUEVA CALIFICACIÓN
+                // Formulario para nueva calificacion
                 request.setAttribute("tareas", new TareaDAO().listarPorCurso(cursoId));
                 request.setAttribute("alumnos", new AlumnoDAO().listarPorGrado(curso.getGradoId()));
                 request.getRequestDispatcher("notaForm.jsp").forward(request, response);
                 break;
 
             case "editar":
-                // ✏️ FORMULARIO PARA EDITAR CALIFICACIÓN EXISTENTE
+                // Formulario para editar calificacion existente
                 int idEditar = Integer.parseInt(request.getParameter("id"));
                 Nota notaEditar = dao.obtenerPorId(idEditar);
                 request.setAttribute("nota", notaEditar);
@@ -86,39 +86,39 @@ public class NotaServlet extends HttpServlet {
                 break;
 
             case "eliminar":
-                // 🗑️ ELIMINAR CALIFICACIÓN
+                // Eliminar calificacion
                 int idEliminar = Integer.parseInt(request.getParameter("id"));
                 dao.eliminar(idEliminar);
                 response.sendRedirect("NotaServlet?curso_id=" + cursoId);
                 break;
 
             default:
-                // 🔄 REDIRECCIÓN POR DEFECTO
+                // Redireccion por defecto
                 response.sendRedirect("NotaServlet?curso_id=" + cursoId);
         }
     }
 
     /**
-     * 💾 MÉTODO POST - GUARDAR CALIFICACIONES
+     * METODO POST - GUARDAR CALIFICACIONES
      * 
-     * Maneja el envío de formularios para crear nuevas calificaciones
+     * Maneja el envio de formularios para crear nuevas calificaciones
      * y actualizar calificaciones existentes
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 📥 DETERMINAR SI ES CREACIÓN (id=0) O ACTUALIZACIÓN (id>0)
+        // Determinar si es creacion (id=0) o actualizacion (id>0)
         int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
                 ? Integer.parseInt(request.getParameter("id")) : 0;
 
-        // 🧩 CONSTRUIR OBJETO NOTA CON DATOS DEL FORMULARIO
+        // Construir objeto nota con datos del formulario
         Nota n = new Nota();
         n.setCursoId(Integer.parseInt(request.getParameter("curso_id")));
         n.setTareaId(Integer.parseInt(request.getParameter("tarea_id")));
         n.setAlumnoId(Integer.parseInt(request.getParameter("alumno_id")));
         
-        // ✅ VALIDAR QUE LA NOTA NO ESTÉ VACÍA
+        // Validar que la nota no este vacia
         String notaStr = request.getParameter("nota");
         if (notaStr == null || notaStr.trim().isEmpty()) {
             response.sendRedirect("NotaServlet?accion=nuevo&curso_id=" + request.getParameter("curso_id"));
@@ -126,18 +126,18 @@ public class NotaServlet extends HttpServlet {
         }
         n.setNota(Double.parseDouble(notaStr.trim()));
 
-        // 💾 EJECUTAR OPERACIÓN EN BASE DE DATOS
+        // Ejecutar operacion en base de datos
         boolean resultado;
         if (id == 0) {
-            resultado = dao.agregar(n); // 🆕 NUEVA CALIFICACIÓN
-            System.out.println("✅ Nueva calificación registrada: " + n.getNota() + " (Alumno: " + n.getAlumnoId() + ")");
+            resultado = dao.agregar(n); // Nueva calificacion
+            System.out.println("Nueva calificacion registrada: " + n.getNota() + " (Alumno: " + n.getAlumnoId() + ")");
         } else {
             n.setId(id);
-            resultado = dao.actualizar(n); // ✏️ ACTUALIZAR CALIFICACIÓN
-            System.out.println("✅ Calificación actualizada: " + n.getNota() + " (ID: " + id + ")");
+            resultado = dao.actualizar(n); // Actualizar calificacion
+            System.out.println("Calificacion actualizada: " + n.getNota() + " (ID: " + id + ")");
         }
 
-        // 🔄 REDIRIGIR A LA LISTA DE CALIFICACIONES DEL CURSO
+        // Redirigir a la lista de calificaciones del curso
         response.sendRedirect("NotaServlet?curso_id=" + n.getCursoId());
     }
 }

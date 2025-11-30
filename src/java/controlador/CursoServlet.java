@@ -1,7 +1,7 @@
 /*
- * SERVLET PARA GESTIÓN COMPLETA DE CURSOS ACADÉMICOS
+ * SERVLET PARA GESTION COMPLETA DE CURSOS ACADEMICOS
  * 
- * Funcionalidades: CRUD completo de cursos, asignación de profesores, filtros por grado
+ * Funcionalidades: CRUD completo de cursos, asignacion de profesores, filtros por grado
  * Roles: Administrador
  */
 package controlador;
@@ -18,17 +18,17 @@ import modelo.ProfesorDAO;
 @WebServlet("/CursoServlet")
 public class CursoServlet extends HttpServlet {
 
-    // 📚 DAO PARA OPERACIONES CON LA TABLA DE CURSOS
+    // DAO para operaciones con la tabla de cursos
     CursoDAO dao = new CursoDAO();
 
     /**
-     * 📖 MÉTODO GET - CONSULTAS Y NAVEGACIÓN
+     * METODO GET - CONSULTAS Y NAVEGACION
      * 
      * Acciones soportadas:
      * - listar: Muestra todos los cursos
-     * - filtrar: Filtra por grado específico
-     * - nuevo: Formulario de creación
-     * - editar: Formulario de edición
+     * - filtrar: Filtra por grado especifico
+     * - nuevo: Formulario de creacion
+     * - editar: Formulario de edicion
      * - eliminar: Elimina curso
      */
     @Override
@@ -36,29 +36,29 @@ public class CursoServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String accion = request.getParameter("accion");
-        System.out.println("➡️ Acción recibida: " + accion);
+        System.out.println("Accion recibida: " + accion);
 
-        // 📋 ACCIÓN POR DEFECTO: LISTAR TODOS LOS CURSOS
+        // Accion por defecto: listar todos los cursos
         if (accion == null || accion.equals("listar")) {
-            // 🎯 CARGAR DATOS NECESARIOS PARA LA VISTA
+            // Cargar datos necesarios para la vista
             request.setAttribute("grados", new GradoDAO().listar()); // Para filtros
             request.setAttribute("lista", dao.listar()); // Lista de cursos
             request.getRequestDispatcher("cursos.jsp").forward(request, response);
             return;
         }
 
-        // 🔍 FILTRAR CURSOS POR GRADO ESPECÍFICO
+        // Filtrar cursos por grado especifico
         if (accion.equals("filtrar")) {
             String gradoStr = request.getParameter("grado_id");
 
             if (gradoStr == null || gradoStr.isEmpty()) {
-                // 🎯 SIN FILTRO: MOSTRAR TODOS LOS CURSOS
+                // Sin filtro: mostrar todos los cursos
                 request.setAttribute("lista", dao.listar());
             } else {
-                // 🎯 CON FILTRO: MOSTRAR CURSOS DEL GRADO SELECCIONADO
+                // Con filtro: mostrar cursos del grado seleccionado
                 int gradoId = Integer.parseInt(gradoStr);
                 request.setAttribute("lista", dao.listarPorGrado(gradoId));
-                request.setAttribute("gradoSeleccionado", gradoId); // Mantener selección
+                request.setAttribute("gradoSeleccionado", gradoId); // Mantener seleccion
             }
 
             request.setAttribute("grados", new GradoDAO().listar());
@@ -66,19 +66,19 @@ public class CursoServlet extends HttpServlet {
             return;
         }
 
-        // ➕ MOSTRAR FORMULARIO PARA NUEVO CURSO
+        // Mostrar formulario para nuevo curso
         if (accion.equals("nuevo")) {
-            // 🎯 CARGAR LISTAS DESPLEGABLES PARA FORMULARIO
+            // Cargar listas desplegables para formulario
             request.setAttribute("grados", new GradoDAO().listar());
             request.setAttribute("profesores", new ProfesorDAO().listar());
             request.getRequestDispatcher("cursoForm.jsp").forward(request, response);
             return;
         }
 
-        // ✏️ MOSTRAR FORMULARIO PARA EDITAR CURSO EXISTENTE
+        // Mostrar formulario para editar curso existente
         if (accion.equals("editar")) {
             int idEditar = Integer.parseInt(request.getParameter("id"));
-            Curso c = dao.obtenerPorId(idEditar); // 📥 OBTENER CURSO DE BD
+            Curso c = dao.obtenerPorId(idEditar); // Obtener curso de BD
             request.setAttribute("cursos", c);
             request.setAttribute("grados", new GradoDAO().listar());
             request.setAttribute("profesores", new ProfesorDAO().listar());
@@ -86,12 +86,12 @@ public class CursoServlet extends HttpServlet {
             return;
         }
 
-        // 🗑️ ELIMINAR CURSO CON CONFIRMACIÓN
+        // Eliminar curso con confirmacion
         if (accion.equals("eliminar")) {
             int idEliminar = Integer.parseInt(request.getParameter("id"));
             boolean resultado = dao.eliminar(idEliminar);
             
-            // 📢 MOSTRAR MENSAJE DE RESULTADO
+            // Mostrar mensaje de resultado
             request.getSession().setAttribute("mensajeCurso", resultado
                     ? "Curso eliminado correctamente"
                     : "Error al eliminar el curso");
@@ -101,7 +101,7 @@ public class CursoServlet extends HttpServlet {
     }
 
     /**
-     * 💾 MÉTODO POST - PROCESAMIENTO DE FORMULARIOS
+     * METODO POST - PROCESAMIENTO DE FORMULARIOS
      * 
      * Funcionalidades:
      * - Crear nuevos cursos
@@ -112,7 +112,7 @@ public class CursoServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 📥 DETERMINAR SI ES CREACIÓN O EDICIÓN (ID = 0 → NUEVO)
+        // Determinar si es creacion o edicion (ID = 0 -> NUEVO)
         int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
                 ? Integer.parseInt(request.getParameter("id")) : 0;
 
@@ -120,7 +120,7 @@ public class CursoServlet extends HttpServlet {
         c.setNombre(request.getParameter("nombre"));
 
         try {
-            // ✅ VALIDAR DATOS OBLIGATORIOS: GRADO Y PROFESOR
+            // Validar datos obligatorios: grado y profesor
             String gradoStr = request.getParameter("grado_id");
             String profesorStr = request.getParameter("profesor_id");
 
@@ -132,35 +132,35 @@ public class CursoServlet extends HttpServlet {
             c.setProfesorId(Integer.parseInt(profesorStr));
 
         } catch (Exception e) {
-            System.out.println("❌ ERROR: grado_id o profesor_id inválidos");
+            System.out.println("ERROR: grado_id o profesor_id invalidos");
             e.printStackTrace();
             request.getSession().setAttribute("mensajeCurso", "Error: Debes seleccionar grado y profesor.");
             response.sendRedirect("CursoServlet?accion=nuevo");
             return;
         }
 
-        // 📊 MANEJAR CRÉDITOS (CAMPO OPCIONAL)
+        // Manejar creditos (campo opcional)
         try {
             c.setCreditos(Integer.parseInt(request.getParameter("creditos")));
         } catch (NumberFormatException e) {
-            c.setCreditos(0); // 🔧 VALOR POR DEFECTO EN CASO DE ERROR
+            c.setCreditos(0); // Valor por defecto en caso de error
         }
 
-        // 💾 EJECUTAR OPERACIÓN EN BASE DE DATOS
+        // Ejecutar operacion en base de datos
         boolean resultado;
         if (id == 0) {
-            resultado = dao.agregar(c); // 🆕 CREAR NUEVO REGISTRO
+            resultado = dao.agregar(c); // Crear nuevo registro
         } else {
             c.setId(id);
-            resultado = dao.actualizar(c); // ✏️ ACTUALIZAR REGISTRO EXISTENTE
+            resultado = dao.actualizar(c); // Actualizar registro existente
         }
 
-        // 📢 CONFIGURAR MENSAJE DE RETROALIMENTACIÓN
+        // Configurar mensaje de retroalimentacion
         request.getSession().setAttribute("mensajeCurso", resultado
                 ? "Curso guardado correctamente"
                 : "Error al guardar el curso");
 
-        // 🔄 REDIRIGIR A LA LISTA PRINCIPAL
+        // Redirigir a la lista principal
         response.sendRedirect("CursoServlet?accion=listar");
     }
 }

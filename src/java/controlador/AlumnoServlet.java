@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA GESTIÓN COMPLETA DE ESTUDIANTES/ALUMNOS
+ * SERVLET PARA GESTION COMPLETA DE ESTUDIANTES/ALUMNOS
  * 
- * Funcionalidades: CRUD completo, filtrado por grado, integración con cursos
- * Roles: Administrador (gestión), Docente (consulta), Padre (consulta limitada)
- * Integración: Relación con grados, cursos, asistencias y calificaciones
+ * Funcionalidades: CRUD completo, filtrado por grado, integracion con cursos
+ * Roles: Administrador (gestion), Docente (consulta), Padre (consulta limitada)
+ * Integracion: Relacion con grados, cursos, asistencias y calificaciones
  */
 package controlador;
 
@@ -17,18 +17,17 @@ import modelo.Alumno;
 import modelo.AlumnoDAO;
 import modelo.GradoDAO;
 
-// ❌ NOTA: Anotación @WebServlet eliminada para configuración en web.xml
 public class AlumnoServlet extends HttpServlet {
 
-    // 🎓 DAO PARA OPERACIONES CON LA TABLA DE ALUMNOS
+    // DAO para operaciones con la tabla de alumnos
     AlumnoDAO dao = new AlumnoDAO();
 
     /**
-     * 📖 MÉTODO GET - CONSULTAS Y NAVEGACIÓN DE ALUMNOS
+     * METODO GET - CONSULTAS Y NAVEGACION DE ALUMNOS
      * 
      * Acciones soportadas:
-     * - listar: Mostrar todos los alumnos (acción por defecto)
-     * - filtrar: Filtrar alumnos por grado específico
+     * - listar: Mostrar todos los alumnos (accion por defecto)
+     * - filtrar: Filtrar alumnos por grado especifico
      * - nuevo: Formulario para crear nuevo alumno
      * - editar: Formulario para modificar alumno existente
      * - eliminar: Eliminar alumno del sistema
@@ -40,28 +39,27 @@ public class AlumnoServlet extends HttpServlet {
 
         String accion = request.getParameter("accion");
 
-        // 📋 ACCIÓN POR DEFECTO: LISTAR TODOS LOS ALUMNOS CON FILTROS DE GRADO
+        // Accion por defecto: listar todos los alumnos con filtros de grado
         if (accion == null) {
-            request.setAttribute("grados", new GradoDAO().listar()); // 🎯 CARGAR GRADOS PARA FILTROS
-            request.setAttribute("lista", dao.listar()); // 📚 CARGAR TODOS LOS ALUMNOS
+            request.setAttribute("grados", new GradoDAO().listar());
+            request.setAttribute("lista", dao.listar());
             request.getRequestDispatcher("alumnos.jsp").forward(request, response);
             return;
         }
 
-        // 🔍 FILTRAR ALUMNOS POR GRADO ESPECÍFICO
+        // Filtrar alumnos por grado especifico
         if (accion.equals("filtrar")) {
             String gradoStr = request.getParameter("grado_id");
 
-            // 🎯 CARGAR LISTA DE GRADOS PARA EL FORMULARIO
             request.setAttribute("grados", new GradoDAO().listar());
 
             if (gradoStr == null || gradoStr.isEmpty()) {
-                // 📋 SIN FILTRO: MOSTRAR TODOS LOS ALUMNOS
+                // Sin filtro: mostrar todos los alumnos
                 request.setAttribute("lista", dao.listar());
             } else {
-                // 🎯 CON FILTRO: MOSTRAR ALUMNOS DEL GRADO SELECCIONADO
+                // Con filtro: mostrar alumnos del grado seleccionado
                 int gradoId = Integer.parseInt(gradoStr);
-                request.setAttribute("gradoSeleccionado", gradoId); // 💾 GUARDAR SELECCIÓN
+                request.setAttribute("gradoSeleccionado", gradoId);
                 request.setAttribute("lista", dao.listarPorGrado(gradoId));
             }
 
@@ -69,23 +67,23 @@ public class AlumnoServlet extends HttpServlet {
             return;
         }
 
-        // 🔄 ENDPOINT AJAX: OBTENER ALUMNOS POR CURSO (PARA REGISTRO DE ASISTENCIAS/NOTAS)
+        // Endpoint AJAX: obtener alumnos por curso (para registro de asistencias/notas)
         if (accion.equals("obtenerPorCurso")) {
             obtenerAlumnosPorCurso(request, response);
             return;
         }
 
-        // ➕ MOSTRAR FORMULARIO PARA NUEVO ALUMNO
+        // Mostrar formulario para nuevo alumno
         if (accion.equals("nuevo")) {
             request.setAttribute("grados", new GradoDAO().listar());
             request.getRequestDispatcher("alumnoForm.jsp").forward(request, response);
             return;
         }
 
-        // 🎯 PROCESAR ACCIONES RESTANTES
+        // Procesar acciones restantes
         switch (accion) {
             case "editar":
-                // ✏️ CARGAR FORMULARIO DE EDICIÓN DE ALUMNO
+                // Cargar formulario de edicion de alumno
                 int idEditar = Integer.parseInt(request.getParameter("id"));
                 Alumno alumno = dao.obtenerPorId(idEditar);
                 request.setAttribute("alumno", alumno);
@@ -94,33 +92,33 @@ public class AlumnoServlet extends HttpServlet {
                 break;
 
             case "eliminar":
-                // 🗑️ ELIMINAR ALUMNO DEL SISTEMA
+                // Eliminar alumno del sistema
                 int idEliminar = Integer.parseInt(request.getParameter("id"));
                 dao.eliminar(idEliminar);
                 response.sendRedirect("AlumnoServlet");
                 break;
 
             default:
-                // 🔄 REDIRECCIÓN POR DEFECTO
+                // Redireccion por defecto
                 response.sendRedirect("AlumnoServlet");
         }
     }
 
     /**
-     * 💾 MÉTODO POST - CREAR Y ACTUALIZAR ALUMNOS
+     * METODO POST - CREAR Y ACTUALIZAR ALUMNOS
      * 
-     * Maneja el envío de formularios para crear nuevos alumnos
-     * y actualizar información de alumnos existentes
+     * Maneja el envio de formularios para crear nuevos alumnos
+     * y actualizar informacion de alumnos existentes
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 📥 DETERMINAR SI ES CREACIÓN (id=0) O ACTUALIZACIÓN (id>0)
+        // Determinar si es creacion (id=0) o actualizacion (id>0)
         int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
                 ? Integer.parseInt(request.getParameter("id")) : 0;
 
-        // 🧩 CONSTRUIR OBJETO ALUMNO CON DATOS DEL FORMULARIO
+        // Construir objeto alumno con datos del formulario
         Alumno a = new Alumno();
         a.setNombres(request.getParameter("nombres"));
         a.setApellidos(request.getParameter("apellidos"));
@@ -128,26 +126,26 @@ public class AlumnoServlet extends HttpServlet {
         a.setFechaNacimiento(request.getParameter("fecha_nacimiento"));
         a.setGradoId(Integer.parseInt(request.getParameter("grado_id")));
 
-        // 💾 EJECUTAR OPERACIÓN EN BASE DE DATOS
+        // Ejecutar operacion en base de datos
         if (id == 0) {
-            dao.agregar(a); // 🆕 CREAR NUEVO ALUMNO
-            System.out.println("✅ Nuevo alumno creado: " + a.getNombres() + " " + a.getApellidos());
+            dao.agregar(a);
+            System.out.println("Nuevo alumno creado: " + a.getNombres() + " " + a.getApellidos());
         } else {
             a.setId(id);
-            dao.actualizar(a); // ✏️ ACTUALIZAR ALUMNO EXISTENTE
-            System.out.println("✅ Alumno actualizado: " + a.getNombres() + " " + a.getApellidos() + " (ID: " + id + ")");
+            dao.actualizar(a);
+            System.out.println("Alumno actualizado: " + a.getNombres() + " " + a.getApellidos() + " (ID: " + id + ")");
         }
 
-        // 🔄 REDIRIGIR A LA LISTA PRINCIPAL DE ALUMNOS
+        // Redirigir a la lista principal de alumnos
         response.sendRedirect("AlumnoServlet");
     }
 
     /**
-     * 🔄 ENDPOINT AJAX - OBTENER ALUMNOS POR CURSO (JSON)
+     * ENDPOINT AJAX - OBTENER ALUMNOS POR CURSO (JSON)
      * 
-     * Propósito: Proveer datos para interfaces dinámicas como:
+     * Proposito: Proveer datos para interfaces dinamicas como:
      * - Registro de asistencias por curso
-     * - Asignación de calificaciones
+     * - Asignacion de calificaciones
      * - Listas de estudiantes por clase
      * 
      * @return JSON array con datos de alumnos
@@ -155,57 +153,57 @@ public class AlumnoServlet extends HttpServlet {
     private void obtenerAlumnosPorCurso(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 🎯 CONFIGURAR RESPUESTA COMO JSON
+        // Configurar respuesta como JSON
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        System.out.println("=== 🔍 INICIANDO DEBUG obtenerAlumnosPorCurso ===");
+        System.out.println("INICIANDO DEBUG obtenerAlumnosPorCurso");
 
         try {
-            // 📥 CAPTURAR Y VALIDAR PARÁMETRO CURSO_ID
+            // Capturar y validar parametro curso_id
             String cursoIdParam = request.getParameter("curso_id");
-            System.out.println("📥 Parámetro curso_id recibido: '" + cursoIdParam + "'");
-            System.out.println("📥 Todos los parámetros: " + request.getParameterMap().toString());
+            System.out.println("Parametro curso_id recibido: '" + cursoIdParam + "'");
+            System.out.println("Todos los parametros: " + request.getParameterMap().toString());
 
-            // 🚨 VALIDAR PARÁMETRO OBLIGATORIO
+            // Validar parametro obligatorio
             if (cursoIdParam == null || cursoIdParam.isEmpty()) {
-                System.out.println("❌ ERROR: curso_id es nulo o vacío");
+                System.out.println("ERROR: curso_id es nulo o vacio");
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().print("{\"error\": \"Parámetro curso_id requerido\"}");
+                response.getWriter().print("{\"error\": \"Parametro curso_id requerido\"}");
                 return;
             }
 
-            // 🔢 CONVERTIR Y EJECUTAR CONSULTA
+            // Convertir y ejecutar consulta
             int cursoId = Integer.parseInt(cursoIdParam);
-            System.out.println("🔍 Buscando alumnos para curso ID: " + cursoId);
+            System.out.println("Buscando alumnos para curso ID: " + cursoId);
 
             List<Alumno> alumnos = dao.obtenerAlumnosPorCurso(cursoId);
 
-            System.out.println("📊 Alumnos encontrados: " + alumnos.size());
+            System.out.println("Alumnos encontrados: " + alumnos.size());
 
-            // 📝 LOG DETALLADO DE ALUMNOS ENCONTRADOS
+            // Log detallado de alumnos encontrados
             for (Alumno alumno : alumnos) {
-                System.out.println("   👤 " + alumno.getId() + " - " + alumno.getNombres() + " " + alumno.getApellidos());
+                System.out.println("Alumno: " + alumno.getId() + " - " + alumno.getNombres() + " " + alumno.getApellidos());
             }
 
-            // 📦 CONVERTIR RESULTADOS A JSON Y ENVIAR RESPUESTA
+            // Convertir resultados a JSON y enviar respuesta
             String json = convertirAlumnosAJson(alumnos);
-            System.out.println("📦 JSON a enviar: " + json);
+            System.out.println("JSON a enviar: " + json);
 
             PrintWriter out = response.getWriter();
             out.print(json);
             out.flush();
 
-            System.out.println("=== ✅ FIN DEBUG - Respuesta enviada ===");
+            System.out.println("FIN DEBUG - Respuesta enviada");
 
         } catch (NumberFormatException e) {
-            // 🚨 ERROR EN FORMATO DE PARÁMETRO
-            System.out.println("❌ ERROR: curso_id no es un número válido");
+            // Error en formato de parametro
+            System.out.println("ERROR: curso_id no es un numero valido");
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().print("{\"error\": \"ID de curso inválido: debe ser un número\"}");
+            response.getWriter().print("{\"error\": \"ID de curso invalido: debe ser un numero\"}");
         } catch (Exception e) {
-            // 🚨 ERROR GENERAL EN EL PROCESAMIENTO
-            System.out.println("❌ ERROR inesperado:");
+            // Error general en el procesamiento
+            System.out.println("ERROR inesperado:");
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().print("{\"error\": \"Error interno del servidor: " + e.getMessage() + "\"}");
@@ -213,9 +211,9 @@ public class AlumnoServlet extends HttpServlet {
     }
 
     /**
-     * 🛠️ MÉTODO AUXILIAR - CONVERTIR LISTA DE ALUMNOS A JSON MANUALMENTE
+     * METODO AUXILIAR - CONVERTIR LISTA DE ALUMNOS A JSON MANUALMENTE
      * 
-     * Propósito: Generar JSON sin dependencias externas
+     * Proposito: Generar JSON sin dependencias externas
      * Formato: Array de objetos alumno con todos sus atributos
      */
     private String convertirAlumnosAJson(List<Alumno> alumnos) {
@@ -232,7 +230,7 @@ public class AlumnoServlet extends HttpServlet {
                     .append("\"gradoId\":").append(a.getGradoId())
                     .append("}");
 
-            // 🔄 AGREGAR COMA ENTRE ELEMENTOS (EXCEPTO ÚLTIMO)
+            // Agregar coma entre elementos (excepto ultimo)
             if (i < alumnos.size() - 1) {
                 json.append(",");
             }
@@ -243,14 +241,14 @@ public class AlumnoServlet extends HttpServlet {
     }
 
     /**
-     * 🛡️ MÉTODO AUXILIAR - ESCAPAR CARACTERES ESPECIALES EN JSON
+     * METODO AUXILIAR - ESCAPAR CARACTERES ESPECIALES EN JSON
      * 
-     * Propósito: Prevenir errores de sintaxis JSON y ataques de inyección
-     * Caracteres escapados: comillas, barras invertidas, saltos de línea, etc.
+     * Proposito: Prevenir errores de sintaxis JSON y ataques de inyeccion
+     * Caracteres escapados: comillas, barras invertidas, saltos de linea, etc.
      */
     private String escapeJson(String text) {
         if (text == null) {
-            return ""; // 🔄 VALOR POR DEFECTO PARA NULL
+            return "";
         }
         return text.replace("\\", "\\\\")
                 .replace("\"", "\\\"")

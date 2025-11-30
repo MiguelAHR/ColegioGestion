@@ -1,6 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE JUSTIFICACIONES DE ASISTENCIA
+ * 
+ * Funcionalidades:
+ * - Creacion y aprobacion de justificaciones
+ * - Consulta de justificaciones pendientes
+ * - Gestion de documentos adjuntos
  */
 package modelo;
 
@@ -10,6 +14,12 @@ import java.util.*;
 
 public class JustificacionDAO {
 
+    /**
+     * CREAR NUEVA JUSTIFICACION DE ASISTENCIA
+     * 
+     * @param j Objeto Justificacion con datos completos
+     * @return true si la creacion fue exitosa
+     */
     public boolean crearJustificacion(Justificacion j) {
         String sql = "{CALL crear_justificacion(?, ?, ?, ?, ?)}";
         
@@ -25,12 +35,17 @@ public class JustificacionDAO {
             return cs.executeUpdate() > 0;
             
         } catch (Exception e) {
-            System.out.println("❌ Error al crear justificación");
+            System.out.println("Error al crear justificacion");
             e.printStackTrace();
             return false;
         }
     }
 
+    /**
+     * OBTENER JUSTIFICACIONES PENDIENTES DE REVISION
+     * 
+     * @return Lista de justificaciones en estado pendiente
+     */
     public List<Justificacion> obtenerJustificacionesPendientes() {
         List<Justificacion> lista = new ArrayList<>();
         String sql = "{CALL obtener_justificaciones_pendientes()}";
@@ -58,13 +73,19 @@ public class JustificacionDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener justificaciones pendientes");
+            System.out.println("Error al obtener justificaciones pendientes");
             e.printStackTrace();
         }
         
         return lista;
     }
 
+    /**
+     * OBTENER JUSTIFICACIONES POR ALUMNO ESPECIFICO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @return Lista de justificaciones del alumno solicitado
+     */
     public List<Justificacion> obtenerJustificacionesPorAlumno(int alumnoId) {
         List<Justificacion> lista = new ArrayList<>();
         String sql = "{CALL obtener_justificaciones_por_alumno(?)}";
@@ -92,13 +113,21 @@ public class JustificacionDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener justificaciones por alumno");
+            System.out.println("Error al obtener justificaciones por alumno");
             e.printStackTrace();
         }
         
         return lista;
     }
 
+    /**
+     * APROBAR JUSTIFICACION DE ASISTENCIA
+     * 
+     * @param justificacionId Identificador de la justificacion
+     * @param aprobadoPor ID del usuario que aprueba la justificacion
+     * @param observaciones Comentarios sobre la aprobacion
+     * @return true si la aprobacion fue exitosa
+     */
     public boolean aprobarJustificacion(int justificacionId, int aprobadoPor, String observaciones) {
         String sql = "{CALL aprobar_justificacion(?, ?, ?)}";
         
@@ -112,12 +141,20 @@ public class JustificacionDAO {
             return cs.executeUpdate() > 0;
             
         } catch (Exception e) {
-            System.out.println("❌ Error al aprobar justificación");
+            System.out.println("Error al aprobar justificacion");
             e.printStackTrace();
             return false;
         }
     }
 
+    /**
+     * RECHAZAR JUSTIFICACION DE ASISTENCIA
+     * 
+     * @param justificacionId Identificador de la justificacion
+     * @param aprobadoPor ID del usuario que rechaza la justificacion
+     * @param observaciones Comentarios sobre el rechazo
+     * @return true si el rechazo fue exitoso
+     */
     public boolean rechazarJustificacion(int justificacionId, int aprobadoPor, String observaciones) {
         String sql = "{CALL rechazar_justificacion(?, ?, ?)}";
         
@@ -131,7 +168,7 @@ public class JustificacionDAO {
             return cs.executeUpdate() > 0;
             
         } catch (Exception e) {
-            System.out.println("❌ Error al rechazar justificación");
+            System.out.println("Error al rechazar justificacion");
             e.printStackTrace();
             return false;
         }

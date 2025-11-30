@@ -1,6 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE AULAS
+ * 
+ * Funcionalidades:
+ * - Consulta de aulas por sede
+ * - Obtencion de informacion de capacidad y ubicacion
  */
 package modelo;
 
@@ -10,6 +13,12 @@ import java.util.*;
 
 public class AulaDAO {
 
+    /**
+     * OBTENER AULAS POR SEDE ESPECIFICA
+     * 
+     * @param sedeId Identificador de la sede
+     * @return Lista de aulas pertenecientes a la sede
+     */
     public List<Aula> obtenerAulasPorSede(int sedeId) {
         List<Aula> lista = new ArrayList<>();
         String sql = "{CALL obtener_aulas_por_sede(?)}";
@@ -32,7 +41,7 @@ public class AulaDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener aulas por sede");
+            System.out.println("Error al obtener aulas por sede");
             e.printStackTrace();
         }
         

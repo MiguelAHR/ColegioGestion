@@ -1,3 +1,10 @@
+/*
+ * SERVLET PARA GESTION DE USUARIOS DEL SISTEMA
+ * 
+ * Funcionalidades: CRUD completo de usuarios, asignacion de roles, gestion de contraseñas
+ * Roles: Administrador
+ * Integracion: Relacion con todos los modulos del sistema
+ */
 package controlador;
 
 import javax.servlet.ServletException;
@@ -13,6 +20,15 @@ public class UsuarioServlet extends HttpServlet {
 
     private UsuarioDAO dao = new UsuarioDAO();
 
+    /**
+     * METODO GET - CONSULTAS Y NAVEGACION DE USUARIOS
+     * 
+     * Acciones soportadas:
+     * - listar: Mostrar todos los usuarios (accion por defecto)
+     * - nuevo: Formulario para crear nuevo usuario
+     * - editar: Formulario para modificar usuario existente
+     * - eliminar: Eliminar usuario del sistema
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -48,7 +64,7 @@ public class UsuarioServlet extends HttpServlet {
                         response.sendRedirect("UsuarioServlet");
                     }
                 } catch (NumberFormatException e) {
-                    session.setAttribute("error", "ID de usuario inválido");
+                    session.setAttribute("error", "ID de usuario invalido");
                     response.sendRedirect("UsuarioServlet");
                 }
                 break;
@@ -62,7 +78,7 @@ public class UsuarioServlet extends HttpServlet {
                         session.setAttribute("error", "No se pudo eliminar el usuario");
                     }
                 } catch (NumberFormatException e) {
-                    session.setAttribute("error", "ID de usuario inválido");
+                    session.setAttribute("error", "ID de usuario invalido");
                 }
                 response.sendRedirect("UsuarioServlet");
                 break;
@@ -72,6 +88,12 @@ public class UsuarioServlet extends HttpServlet {
         }
     }
 
+    /**
+     * METODO POST - CREAR Y ACTUALIZAR USUARIOS
+     * 
+     * Maneja el envio de formularios para crear nuevos usuarios
+     * y actualizar usuarios existentes con validacion de datos
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -83,7 +105,7 @@ public class UsuarioServlet extends HttpServlet {
         }
 
         if (!dao.verificarConexion()) {
-            session.setAttribute("error", "Error de conexión a la base de datos. Contacte al administrador.");
+            session.setAttribute("error", "Error de conexion a la base de datos. Contacte al administrador.");
             response.sendRedirect("UsuarioServlet");
             return;
         }
@@ -93,7 +115,7 @@ public class UsuarioServlet extends HttpServlet {
         String hashedPasswordFromFrontend = request.getParameter("password");
         String rol = request.getParameter("rol");
 
-        System.out.println("🔍 Datos recibidos - ID: " + idParam + ", Username: " + username + ", Rol: " + rol);
+        System.out.println("Datos recibidos - ID: " + idParam + ", Username: " + username + ", Rol: " + rol);
 
         if (username == null || username.trim().isEmpty() || rol == null || rol.trim().isEmpty()) {
             session.setAttribute("error", "Nombre de usuario y rol son obligatorios");
@@ -106,7 +128,7 @@ public class UsuarioServlet extends HttpServlet {
             try {
                 id = Integer.parseInt(idParam);
             } catch (NumberFormatException e) {
-                session.setAttribute("error", "ID de usuario inválido");
+                session.setAttribute("error", "ID de usuario invalido");
                 response.sendRedirect("UsuarioServlet");
                 return;
             }
@@ -119,10 +141,10 @@ public class UsuarioServlet extends HttpServlet {
 
         try {
             if (id == 0) {
-                System.out.println("🆕 Creando nuevo usuario: " + username);
+                System.out.println("Creando nuevo usuario: " + username);
 
                 if (dao.existeUsuario(username.trim())) {
-                    System.out.println("❌ Usuario ya existe: " + username);
+                    System.out.println("Usuario ya existe: " + username);
                     session.setAttribute("error", "No se pudo registrar el usuario. El nombre de usuario '" + username + "' ya existe.");
                     response.sendRedirect("UsuarioServlet");
                     return;
@@ -137,15 +159,15 @@ public class UsuarioServlet extends HttpServlet {
                 u.setPassword(hashedPasswordFromFrontend.trim());
 
                 if (dao.agregar(u)) {
-                    System.out.println("✅ Usuario creado exitosamente: " + username);
+                    System.out.println("Usuario creado exitosamente: " + username);
                     session.setAttribute("mensaje", "Usuario registrado exitosamente");
                 } else {
-                    System.out.println("❌ Error al crear usuario: " + username);
+                    System.out.println("Error al crear usuario: " + username);
                     session.setAttribute("error", "No se pudo registrar el usuario. Error del sistema.");
                 }
 
             } else {
-                System.out.println("✏️ Actualizando usuario ID: " + id);
+                System.out.println("Actualizando usuario ID: " + id);
 
                 Usuario usuarioActual = dao.obtenerPorId(id);
                 if (usuarioActual == null) {
@@ -156,7 +178,7 @@ public class UsuarioServlet extends HttpServlet {
 
                 if (!usuarioActual.getUsername().equals(username.trim())) {
                     if (dao.existeUsuario(username.trim())) {
-                        System.out.println("❌ Nombre de usuario ya existe: " + username);
+                        System.out.println("Nombre de usuario ya existe: " + username);
                         session.setAttribute("error", "No se pudo actualizar el usuario. El nombre de usuario '" + username + "' ya existe.");
                         response.sendRedirect("UsuarioServlet?accion=editar&id=" + id);
                         return;
@@ -165,23 +187,23 @@ public class UsuarioServlet extends HttpServlet {
 
                 if (hashedPasswordFromFrontend != null && !hashedPasswordFromFrontend.trim().isEmpty()) {
                     u.setPassword(hashedPasswordFromFrontend.trim());
-                    System.out.println("🔄 Actualizando contraseña para usuario: " + username);
+                    System.out.println("Actualizando contraseña para usuario: " + username);
                 } else {
                     u.setPassword(null);
-                    System.out.println("🔄 Manteniendo contraseña actual para usuario: " + username);
+                    System.out.println("Manteniendo contraseña actual para usuario: " + username);
                 }
 
                 if (dao.actualizar(u)) {
-                    System.out.println("✅ Usuario actualizado exitosamente: " + username);
+                    System.out.println("Usuario actualizado exitosamente: " + username);
                     session.setAttribute("mensaje", "Usuario actualizado exitosamente");
                 } else {
-                    System.out.println("❌ Error al actualizar usuario: " + username);
+                    System.out.println("Error al actualizar usuario: " + username);
                     session.setAttribute("error", "No se pudo actualizar el usuario. Verifique los datos o contacte al administrador.");
                 }
             }
 
         } catch (Exception e) {
-            System.err.println("💥 Error en el servlet UsuarioServlet:");
+            System.err.println("Error en el servlet UsuarioServlet:");
             e.printStackTrace();
             session.setAttribute("error", "Error en el sistema: " + e.getMessage());
         }

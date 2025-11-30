@@ -1,6 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE SEDES EDUCATIVAS
+ * 
+ * Funcionalidades:
+ * - Consulta de sedes activas
+ * - Obtencion de informacion de ubicaciones
  */
 package modelo;
 
@@ -10,6 +13,11 @@ import java.util.*;
 
 public class SedeDAO {
 
+    /**
+     * OBTENER LISTA DE SEDES ACTIVAS
+     * 
+     * @return Lista de objetos Sede con estado activo
+     */
     public List<Sede> obtenerSedesActivas() {
         List<Sede> lista = new ArrayList<>();
         String sql = "{CALL obtener_sedes_activas()}";
@@ -29,7 +37,7 @@ public class SedeDAO {
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener sedes activas");
+            System.out.println("Error al obtener sedes activas");
             e.printStackTrace();
         }
         

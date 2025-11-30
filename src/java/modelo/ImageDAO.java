@@ -1,6 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE IMAGENES DE ALUMNOS
+ * 
+ * Funcionalidades:
+ * - Almacenamiento y recuperacion de imagenes
+ * - Asociacion de imagenes con alumnos
+ * - Eliminacion de archivos fisicos y registros
  */
 package modelo;
 
@@ -12,7 +16,13 @@ import java.util.List;
 
 public class ImageDAO {
 
-    // Guarda una nueva imagen
+    /**
+     * GUARDAR NUEVA IMAGEN ASOCIADA A ALUMNO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @param ruta Ruta relativa del archivo de imagen
+     * @return true si el guardado fue exitoso
+     */
     public boolean guardarImagen(int alumnoId, String ruta) {
         String sql = "INSERT INTO imagenes (alumno_id, ruta) VALUES (?, ?)";
         try (Connection c = Conexion.getConnection();
@@ -26,7 +36,12 @@ public class ImageDAO {
         }
     }
 
-    // Recupera todas las imágenes de un alumno
+    /**
+     * LISTAR IMAGENES POR ALUMNO ESPECIFICO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @return Lista de imagenes asociadas al alumno
+     */
     public List<Imagen> listarPorAlumno(int alumnoId) {
         List<Imagen> lista = new ArrayList<>();
         String sql = "SELECT id, alumno_id, ruta, fecha_subida FROM imagenes WHERE alumno_id = ?";
@@ -48,6 +63,13 @@ public class ImageDAO {
         return lista;
     }
     
+    /**
+     * ELIMINAR IMAGEN POR ID Y ARCHIVO FISICO
+     * 
+     * @param id Identificador de la imagen
+     * @param contextPath Ruta del contexto de la aplicacion
+     * @return true si la eliminacion fue exitosa
+     */
     public boolean eliminarImagen(int id, String contextPath) {
         String sqlSelect = "SELECT ruta FROM imagenes WHERE id = ?";
         String sqlDelete = "DELETE FROM imagenes WHERE id = ?";
@@ -79,4 +101,3 @@ public class ImageDAO {
         }
     }
 }
-

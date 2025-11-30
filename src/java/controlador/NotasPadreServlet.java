@@ -3,7 +3,7 @@
  * 
  * Funcionalidades: Listar notas del alumno para vista de padres
  * Roles: Padre
- * Integración: Relación con alumno, cursos y tareas
+ * Integracion: Relacion con alumno, cursos y tareas
  */
 package controlador;
 
@@ -19,7 +19,7 @@ import java.util.List;
 public class NotasPadreServlet extends HttpServlet {
 
     /**
-     * 📖 MÉTODO GET - LISTAR NOTAS DEL ALUMNO (VISTA PADRES)
+     * METODO GET - LISTAR NOTAS DEL ALUMNO (VISTA PADRES)
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -28,18 +28,18 @@ public class NotasPadreServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Padre padre = (Padre) session.getAttribute("padre");
 
-        // 🔐 VERIFICAR AUTENTICACIÓN Y DATOS DE PADRE
+        // Verificar autenticacion y datos de padre
         if (padre == null) {
             response.sendRedirect("index.jsp");
             return;
         }
 
-        // 📊 OBTENER NOTAS DEL ALUMNO DESDE LA BASE DE DATOS
+        // Obtener notas del alumno desde la base de datos
         NotaDAO dao = new NotaDAO();
         List<Nota> lista = dao.listarPorAlumno(padre.getAlumnoId());
         request.setAttribute("notas", lista);
 
-        // 🎯 CARGAR VISTA ESPECÍFICA PARA PADRES
+        // Cargar vista especifica para padres
         request.getRequestDispatcher("notasPadre.jsp").forward(request, response);
     }
 }

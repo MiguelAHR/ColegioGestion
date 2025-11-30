@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA CARGAR EL DASHBOARD ESPECÍFICO DE DOCENTES
+ * SERVLET PARA CARGAR EL DASHBOARD ESPECIFICO DE DOCENTES
  * 
  * Funcionalidades: Cargar cursos del docente y redirigir a dashboard
  * Roles: Docente
- * Integración: Relación con cursos y profesores
+ * Integracion: Relacion con cursos y profesores
  */
 package controlador;
 
@@ -23,7 +23,7 @@ import modelo.CursoDAO;
 public class DocenteDashboardServlet extends HttpServlet {
 
     /**
-     * 📖 MÉTODO GET - CARGAR DASHBOARD DEL DOCENTE
+     * METODO GET - CARGAR DASHBOARD DEL DOCENTE
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -32,36 +32,36 @@ public class DocenteDashboardServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Profesor docente = (Profesor) session.getAttribute("docente");
         
-        // 🔐 VERIFICAR QUE EL USUARIO ESTÉ AUTENTICADO COMO DOCENTE
+        // Verificar que el usuario este autenticado como docente
         if (docente == null) {
             response.sendRedirect("index.jsp");
             return;
         }
         
         try {
-            System.out.println("🔍 Cargando cursos para profesor ID: " + docente.getId());
+            System.out.println("Cargando cursos para profesor ID: " + docente.getId());
             
-            // 📚 CARGAR LOS CURSOS DEL DOCENTE
+            // Cargar los cursos del docente
             CursoDAO cursoDAO = new CursoDAO();
             List<Curso> cursos = cursoDAO.listarPorProfesor(docente.getId());
             
-            System.out.println("📊 Cursos encontrados: " + (cursos != null ? cursos.size() : 0));
+            System.out.println("Cursos encontrados: " + (cursos != null ? cursos.size() : 0));
             
-            // 📝 LOG DETALLADO DE CURSOS
+            // Log detallado de cursos
             if (cursos != null) {
                 for (Curso curso : cursos) {
                     System.out.println("   - " + curso.getNombre() + " (Grado: " + curso.getGradoNombre() + ")");
                 }
             }
             
-            // 📤 PONER LOS CURSOS EN EL REQUEST PARA QUE LOS USE EL JSP
+            // Poner los cursos en el request para que los use el JSP
             request.setAttribute("misCursos", cursos);
             
-            // 🎯 REDIRIGIR AL DASHBOARD DEL DOCENTE
+            // Redirigir al dashboard del docente
             request.getRequestDispatcher("docenteDashboard.jsp").forward(request, response);
             
         } catch (Exception e) {
-            System.out.println("❌ Error en DocenteDashboardServlet:");
+            System.out.println("Error en DocenteDashboardServlet:");
             e.printStackTrace();
             session.setAttribute("error", "Error al cargar los cursos: " + e.getMessage());
             response.sendRedirect("error.jsp");

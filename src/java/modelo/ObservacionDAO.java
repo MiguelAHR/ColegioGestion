@@ -1,6 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE OBSERVACIONES ACADEMICAS
+ * 
+ * Funcionalidades:
+ * - CRUD de observaciones sobre alumnos
+ * - Consultas por alumno y curso
+ * - Registro de comentarios academicos y conductuales
  */
 package modelo;
 
@@ -10,7 +14,12 @@ import java.util.*;
 
 public class ObservacionDAO {
 
-    // Agregar una observación usando un Stored Procedure
+    /**
+     * AGREGAR NUEVA OBSERVACION ACADEMICA
+     * 
+     * @param o Objeto Observacion con texto y referencias
+     * @return true si el registro fue exitoso
+     */
     public boolean agregar(Observacion o) {
         String sql = "{CALL crear_observacion(?, ?, ?)}";
 
@@ -21,13 +30,18 @@ public class ObservacionDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al agregar observación");
+            System.out.println("Error al agregar observacion");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Actualizar una observación usando un Stored Procedure
+    /**
+     * ACTUALIZAR OBSERVACION EXISTENTE
+     * 
+     * @param o Objeto Observacion con datos actualizados
+     * @return true si la actualizacion fue exitosa
+     */
     public boolean actualizar(Observacion o) {
         String sql = "{CALL actualizar_observacion(?, ?, ?, ?)}";
 
@@ -39,13 +53,18 @@ public class ObservacionDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al actualizar observación");
+            System.out.println("Error al actualizar observacion");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Eliminar una observación usando un Stored Procedure
+    /**
+     * ELIMINAR OBSERVACION POR ID
+     * 
+     * @param id Identificador unico de la observacion
+     * @return true si la eliminacion fue exitosa
+     */
     public boolean eliminar(int id) {
         String sql = "{CALL eliminar_observacion(?)}";
 
@@ -54,13 +73,18 @@ public class ObservacionDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al eliminar observación");
+            System.out.println("Error al eliminar observacion");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Obtener una observación por ID usando un Stored Procedure
+    /**
+     * OBTENER OBSERVACION POR ID CON INFORMACION COMPLETA
+     * 
+     * @param id Identificador de la observacion
+     * @return Objeto Observacion con datos completos o null si no existe
+     */
     public Observacion obtenerPorId(int id) {
         Observacion o = null;
         String sql = "{CALL obtener_observacion_por_id(?)}";
@@ -85,7 +109,12 @@ public class ObservacionDAO {
         return o;
     }
 
-    // Listar observaciones por alumno usando un Stored Procedure
+    /**
+     * LISTAR OBSERVACIONES POR ALUMNO ESPECIFICO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @return Lista de observaciones del alumno solicitado
+     */
     public List<Observacion> listarPorAlumno(int alumnoId) {
         List<Observacion> lista = new ArrayList<>();
         String sql = "{CALL obtener_observaciones_por_alumno(?)}";
@@ -105,14 +134,19 @@ public class ObservacionDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("❌ Error al listar observaciones por alumno");
+            System.out.println("Error al listar observaciones por alumno");
             e.printStackTrace();
         }
 
         return lista;
     }
 
-    // Listar observaciones por curso usando un Stored Procedure
+    /**
+     * LISTAR OBSERVACIONES POR CURSO ESPECIFICO
+     * 
+     * @param cursoId Identificador del curso
+     * @return Lista de observaciones del curso solicitado
+     */
     public List<Observacion> listarPorCurso(int cursoId) {
         List<Observacion> lista = new ArrayList<>();
         String sql = "{CALL obtener_observaciones_por_curso(?)}";
@@ -137,4 +171,3 @@ public class ObservacionDAO {
         return lista;
     }
 }
-

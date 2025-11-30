@@ -38,7 +38,6 @@
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
-                   
                     <th>Nombres</th>
                     <th>Apellidos</th>
                     <th>Correo</th>
@@ -52,7 +51,6 @@
                         for (Profesor p : lista) {
                 %>
                 <tr>
-                    <td><%= p.getId()%></td>
                     <td><%= p.getNombres()%></td>
                     <td><%= p.getApellidos()%></td>
                     <td><%= p.getCorreo()%></td>
@@ -68,7 +66,7 @@
                 } else {
                 %>
                 <tr>
-                    <td colspan="6" class="text-center">No hay profesores registrados.</td>
+                    <td colspan="5" class="text-center">No hay profesores registrados.</td>
                 </tr>
                 <%
                     }
@@ -109,4 +107,3 @@
         </div>
     </footer>
 </body>
-

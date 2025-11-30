@@ -1,3 +1,11 @@
+/*
+ * DAO PARA GESTION DE PROFESORES
+ * 
+ * Funcionalidades:
+ * - CRUD completo de profesores
+ * - Consulta por credenciales de usuario
+ * - Integracion con sistema de autenticacion
+ */
 package modelo;
 
 import conexion.Conexion;
@@ -6,7 +14,12 @@ import java.util.*;
 
 public class ProfesorDAO {
 
-    // Obtener un profesor por username usando el procedimiento almacenado
+    /**
+     * OBTENER PROFESOR POR NOMBRE DE USUARIO
+     * 
+     * @param username Nombre de usuario del profesor
+     * @return Objeto Profesor con datos completos o null si no existe
+     */
     public Profesor obtenerPorUsername(String username) {
         System.out.println("[ProfesorDAO] Buscando profesor para username: " + username);
         
@@ -34,7 +47,11 @@ public class ProfesorDAO {
         return profesor;
     }
 
-    // Listar todos los profesores usando el procedimiento almacenado
+    /**
+     * LISTAR TODOS LOS PROFESORES
+     * 
+     * @return Lista completa de profesores registrados
+     */
     public List<Profesor> listar() {
         List<Profesor> lista = new ArrayList<>();
         String sql = "{CALL obtener_profesores()}";
@@ -55,7 +72,12 @@ public class ProfesorDAO {
         return lista;
     }
 
-    // Agregar un profesor usando el procedimiento almacenado
+    /**
+     * AGREGAR NUEVO PROFESOR
+     * 
+     * @param p Objeto Profesor con datos del nuevo profesor
+     * @return true si el registro fue exitoso
+     */
     public boolean agregar(Profesor p) {
         String sql = "{CALL crear_profesor(?, ?, ?, ?)}";
 
@@ -82,7 +104,12 @@ public class ProfesorDAO {
         }
     }
 
-    // Obtener un profesor por ID usando el procedimiento almacenado
+    /**
+     * OBTENER PROFESOR POR ID
+     * 
+     * @param id Identificador unico del profesor
+     * @return Objeto Profesor o null si no existe
+     */
     public Profesor obtenerPorId(int id) {
         Profesor p = null;
         String sql = "{CALL obtener_profesor_por_id(?)}";
@@ -105,7 +132,12 @@ public class ProfesorDAO {
         return p;
     }
 
-    // Actualizar un profesor usando el procedimiento almacenado
+    /**
+     * ACTUALIZAR DATOS DE PROFESOR EXISTENTE
+     * 
+     * @param p Objeto Profesor con datos actualizados
+     * @return true si la actualizacion fue exitosa
+     */
     public boolean actualizar(Profesor p) {
         String sql = "{CALL actualizar_profesor(?, ?, ?, ?, ?)}";
 
@@ -129,7 +161,12 @@ public class ProfesorDAO {
         }
     }
 
-    // Eliminar un profesor usando el procedimiento almacenado
+    /**
+     * ELIMINAR PROFESOR POR ID
+     * 
+     * @param id Identificador del profesor a eliminar
+     * @return true si la eliminacion fue exitosa
+     */
     public boolean eliminar(int id) {
         String sql = "{CALL eliminar_profesor(?)}";
 
@@ -148,7 +185,13 @@ public class ProfesorDAO {
         }
     }
 
-    // Método auxiliar para mapear ResultSet a Profesor
+    /**
+     * METODO AUXILIAR PARA MAPEAR RESULTADO DE CONSULTA A OBJETO PROFESOR
+     * 
+     * @param rs ResultSet con datos de la base de datos
+     * @return Objeto Profesor mapeado
+     * @throws SQLException Si hay error en el acceso a datos
+     */
     private Profesor mapearProfesor(ResultSet rs) throws SQLException {
         Profesor p = new Profesor();
         p.setId(rs.getInt("id"));

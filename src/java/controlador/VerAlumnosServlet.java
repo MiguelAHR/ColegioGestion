@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA CONSULTA DE ALUMNOS POR GRADO (VISTA PÚBLICA/ADMIN)
+ * SERVLET PARA CONSULTA DE ALUMNOS POR GRADO (VISTA PUBLICA/ADMIN)
  * 
  * Funcionalidades: Listar alumnos con filtro por grado
  * Roles: Admin, Docente (posiblemente)
- * Integración: Relación con grados
+ * Integracion: Relacion con grados
  */
 package controlador;
 
@@ -21,25 +21,25 @@ import java.util.List;
 @WebServlet("/VerAlumnosServlet")
 public class VerAlumnosServlet extends HttpServlet {
 
-    // 🎓 DAO PARA OPERACIONES CON ALUMNOS Y GRADOS
+    // DAO para operaciones con alumnos y grados
     AlumnoDAO alumnoDAO = new AlumnoDAO();
     GradoDAO gradoDAO = new GradoDAO();
 
     /**
-     * 📖 MÉTODO GET - LISTAR ALUMNOS CON FILTRO POR GRADO
+     * METODO GET - LISTAR ALUMNOS CON FILTRO POR GRADO
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 📥 OBTENER PARÁMETRO DE FILTRO (OPCIONAL)
+        // Obtener parametro de filtro (opcional)
         String gradoIdParam = request.getParameter("grado");
 
-        // 🎯 CARGAR LISTA DE GRADOS PARA EL FORMULARIO
+        // Cargar lista de grados para el formulario
         List<Grado> grados = gradoDAO.listar();
         request.setAttribute("grados", grados);
 
-        // 🔍 APLICAR FILTRO SI SE ESPECIFICÓ UN GRADO
+        // Aplicar filtro si se especifico un grado
         if (gradoIdParam != null && !gradoIdParam.isEmpty()) {
             int gradoId = Integer.parseInt(gradoIdParam);
             List<Alumno> alumnos = alumnoDAO.listarPorGrado(gradoId);
@@ -47,7 +47,7 @@ public class VerAlumnosServlet extends HttpServlet {
             request.setAttribute("gradoSeleccionado", gradoId);
         }
 
-        // 🎯 CARGAR VISTA DE LISTA DE ALUMNOS
+        // Cargar vista de lista de alumnos
         request.getRequestDispatcher("verAlumnos.jsp").forward(request, response);
     }
 }

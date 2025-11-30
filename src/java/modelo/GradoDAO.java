@@ -1,6 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE GRADOS ACADEMICOS
+ * 
+ * Funcionalidades:
+ * - CRUD completo de grados academicos
+ * - Consulta por niveles educativos
+ * - Integracion con stored procedures
  */
 package modelo;
 
@@ -10,7 +14,11 @@ import java.util.*;
 
 public class GradoDAO {
 
-    // Listar todos los grados usando un Stored Procedure
+    /**
+     * LISTAR TODOS LOS GRADOS ACADEMICOS
+     * 
+     * @return Lista completa de grados disponibles
+     */
     public List<Grado> listar() {
         List<Grado> lista = new ArrayList<>();
         String sql = "{CALL obtener_grados()}";
@@ -34,7 +42,12 @@ public class GradoDAO {
         return lista;
     }
 
-    // Agregar un grado usando un Stored Procedure
+    /**
+     * AGREGAR NUEVO GRADO ACADEMICO
+     * 
+     * @param g Objeto Grado con datos del nuevo grado
+     * @return true si la creacion fue exitosa
+     */
     public boolean agregar(Grado g) {
         String sql = "{CALL crear_grado(?, ?)}";
 
@@ -52,7 +65,12 @@ public class GradoDAO {
         }
     }
 
-    // Obtener un grado por ID usando un Stored Procedure
+    /**
+     * OBTENER GRADO POR ID
+     * 
+     * @param id Identificador unico del grado
+     * @return Objeto Grado o null si no existe
+     */
     public Grado obtenerPorId(int id) {
         Grado g = null;
         String sql = "{CALL obtener_grado_por_id(?)}";
@@ -76,7 +94,12 @@ public class GradoDAO {
         return g;
     }
 
-    // Actualizar un grado usando un Stored Procedure
+    /**
+     * ACTUALIZAR DATOS DE GRADO EXISTENTE
+     * 
+     * @param g Objeto Grado con datos actualizados
+     * @return true si la actualizacion fue exitosa
+     */
     public boolean actualizar(Grado g) {
         String sql = "{CALL actualizar_grado(?, ?, ?)}";
 
@@ -95,7 +118,12 @@ public class GradoDAO {
         }
     }
 
-    // Eliminar un grado usando un Stored Procedure
+    /**
+     * ELIMINAR GRADO POR ID
+     * 
+     * @param id Identificador del grado a eliminar
+     * @return true si la eliminacion fue exitosa
+     */
     public boolean eliminar(int id) {
         String sql = "{CALL eliminar_grado(?)}";
 
@@ -112,5 +140,3 @@ public class GradoDAO {
         }
     }
 }
-
-

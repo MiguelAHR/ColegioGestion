@@ -1,6 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE NOTAS ACADEMICAS
+ * 
+ * Funcionalidades:
+ * - CRUD completo de notas academicas
+ * - Consultas por alumno y curso
+ * - Integracion con stored procedures de base de datos
  */
 package modelo;
 
@@ -10,7 +14,12 @@ import java.util.*;
 
 public class NotaDAO {
 
-    // Agregar una nota usando un Stored Procedure
+    /**
+     * AGREGAR NUEVA NOTA ACADEMICA
+     * 
+     * @param n Objeto Nota con datos de la calificacion
+     * @return true si la operacion fue exitosa, false en caso contrario
+     */
     public boolean agregar(Nota n) {
         String sql = "{CALL crear_nota(?, ?, ?, ?)}";
 
@@ -23,13 +32,18 @@ public class NotaDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al agregar nota");
+            System.out.println("Error al agregar nota");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Actualizar una nota usando un Stored Procedure
+    /**
+     * ACTUALIZAR NOTA EXISTENTE
+     * 
+     * @param n Objeto Nota con datos actualizados
+     * @return true si la actualizacion fue exitosa
+     */
     public boolean actualizar(Nota n) {
         String sql = "{CALL actualizar_nota(?, ?, ?, ?, ?)}";
 
@@ -43,13 +57,18 @@ public class NotaDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al actualizar nota");
+            System.out.println("Error al actualizar nota");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Eliminar una nota usando un Stored Procedure
+    /**
+     * ELIMINAR NOTA POR ID
+     * 
+     * @param id Identificador unico de la nota
+     * @return true si la eliminacion fue exitosa
+     */
     public boolean eliminar(int id) {
         String sql = "{CALL eliminar_nota(?)}";
 
@@ -58,13 +77,18 @@ public class NotaDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al eliminar nota");
+            System.out.println("Error al eliminar nota");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Obtener una nota por ID usando un Stored Procedure
+    /**
+     * OBTENER NOTA POR ID CON INFORMACION COMPLETA
+     * 
+     * @param id Identificador de la nota
+     * @return Objeto Nota con todos los datos o null si no existe
+     */
     public Nota obtenerPorId(int id) {
         Nota n = null;
         String sql = "{CALL obtener_nota_por_id(?)}";
@@ -90,7 +114,12 @@ public class NotaDAO {
         return n;
     }
 
-    // Listar notas por alumno usando un Stored Procedure
+    /**
+     * LISTAR NOTAS POR ALUMNO ESPECIFICO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @return Lista de notas del alumno solicitado
+     */
     public List<Nota> listarPorAlumno(int alumnoId) {
         List<Nota> lista = new ArrayList<>();
         String sql = "{CALL obtener_notas_por_alumno(?)}";
@@ -112,14 +141,19 @@ public class NotaDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("❌ Error al listar notas por alumno");
+            System.out.println("Error al listar notas por alumno");
             e.printStackTrace();
         }
 
         return lista;
     }
 
-    // Listar notas por curso usando un Stored Procedure
+    /**
+     * LISTAR NOTAS POR CURSO ESPECIFICO
+     * 
+     * @param cursoId Identificador del curso
+     * @return Lista de notas del curso solicitado
+     */
     public List<Nota> listarPorCurso(int cursoId) {
         List<Nota> lista = new ArrayList<>();
         String sql = "{CALL obtener_notas_por_curso(?)}";
@@ -141,11 +175,10 @@ public class NotaDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("❌ Error al listar notas por curso");
+            System.out.println("Error al listar notas por curso");
             e.printStackTrace();
         }
 
         return lista;
     }
 }
-

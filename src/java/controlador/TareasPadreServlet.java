@@ -3,7 +3,7 @@
  * 
  * Funcionalidades: Listar tareas del alumno para vista de padres
  * Roles: Padre
- * Integración: Relación con alumno y cursos
+ * Integracion: Relacion con alumno y cursos
  */
 package controlador;
 
@@ -19,7 +19,7 @@ import java.util.List;
 public class TareasPadreServlet extends HttpServlet {
 
     /**
-     * 📖 MÉTODO GET - LISTAR TAREAS DEL ALUMNO (VISTA PADRES)
+     * METODO GET - LISTAR TAREAS DEL ALUMNO (VISTA PADRES)
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -28,18 +28,18 @@ public class TareasPadreServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Padre padre = (Padre) session.getAttribute("padre");
 
-        // 🔐 VERIFICAR AUTENTICACIÓN Y DATOS DE PADRE
+        // Verificar autenticacion y datos de padre
         if (padre == null) {
             response.sendRedirect("index.jsp");
             return;
         }
 
-        // 📚 OBTENER TAREAS DEL ALUMNO DESDE LA BASE DE DATOS
+        // Obtener tareas del alumno desde la base de datos
         TareaDAO dao = new TareaDAO();
         List<Tarea> lista = dao.listarPorAlumno(padre.getAlumnoId());
         request.setAttribute("tareas", lista);
 
-        // 🎯 CARGAR VISTA ESPECÍFICA PARA PADRES
+        // Cargar vista especifica para padres
         request.getRequestDispatcher("tareasPadre.jsp").forward(request, response);
     }
 }

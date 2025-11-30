@@ -1,3 +1,9 @@
+/*
+ * SERVLET PARA DEPURACION Y DIAGNOSTICO DEL SISTEMA
+ * 
+ * Proposito: Probar funcionalidades especificas y verificar datos en sesion
+ * Uso: Solo para desarrollo, no usar en produccion
+ */
 package controlador;
 
 import java.io.IOException;
@@ -25,14 +31,14 @@ public class DebugServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         
         out.println("=== DEBUG INFO ===");
-        out.println("Padre en sesión: " + (padre != null ? "SÍ" : "NO"));
+        out.println("Padre en sesion: " + (padre != null ? "SI" : "NO"));
         if (padre != null) {
             out.println("Padre ID: " + padre.getId());
             out.println("Alumno ID: " + padre.getAlumnoId());
             out.println("Username: " + padre.getUsername());
             out.println("Alumno Nombre: " + padre.getAlumnoNombre());
         } else {
-            out.println("❌ ERROR: No hay padre en sesión");
+            out.println("ERROR: No hay padre en sesion");
             return;
         }
         

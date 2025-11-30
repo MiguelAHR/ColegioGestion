@@ -1,8 +1,8 @@
 /*
  * SERVLET PARA CIERRE SEGURO DE SESIONES DE USUARIO
  * 
- * Propósito: Invalidar sesiones de manera segura y prevenir acceso no autorizado
- * Características: Eliminación completa de datos de sesión, headers de cache
+ * Proposito: Invalidar sesiones de manera segura y prevenir acceso no autorizado
+ * Caracteristicas: Eliminacion completa de datos de sesion, headers de cache
  * Seguridad: Previene ataques de replay y acceso con sesiones expiradas
  */
 package controlador;
@@ -16,11 +16,11 @@ import javax.servlet.http.*;
 public class LogoutServlet extends HttpServlet {
 
     /**
-     * 📤 MÉTODO GET - PROCESA SOLICITUDES DE CERRAR SESIÓN
+     * METODO GET - PROCESA SOLICITUDES DE CERRAR SESION
      * 
-     * Flujo de cierre de sesión:
-     * 1. Invalidar sesión actual del usuario
-     * 2. Eliminar cookies y datos de sesión
+     * Flujo de cierre de sesion:
+     * 1. Invalidar sesion actual del usuario
+     * 2. Eliminar cookies y datos de sesion
      * 3. Configurar headers para prevenir cache
      * 4. Redirigir al login
      */
@@ -28,26 +28,26 @@ public class LogoutServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 🔐 OBTENER SESIÓN ACTUAL SIN CREAR UNA NUEVA (false = no crear nueva)
+        // Obtener sesion actual sin crear una nueva (false = no crear nueva)
         HttpSession session = request.getSession(false);
         
-        // 🗑️ INVALIDAR SESIÓN EXISTENTE - ELIMINA TODOS LOS DATOS DE SESIÓN
+        // Invalidar sesion existente - elimina todos los datos de sesion
         if (session != null) {
-            session.invalidate(); // 🧨 DESTRUYE COMPLETAMENTE LA SESIÓN
-            System.out.println("✅ Sesión invalidada correctamente");
+            session.invalidate(); // Destruye completamente la sesion
+            System.out.println("Sesion invalidada correctamente");
         } else {
-            System.out.println("ℹ️  No había sesión activa para invalidar");
+            System.out.println("No habia sesion activa para invalidar");
         }
 
-        // 🔒 CONFIGURAR HEADERS DE SEGURIDAD - PREVIENE USO DE CACHE
+        // Configurar headers de seguridad - previene uso de cache
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1
         response.setHeader("Pragma", "no-cache"); // HTTP 1.0
-        response.setDateHeader("Expires", 0); // FECHA DE EXPIRACIÓN EN EL PASADO
+        response.setDateHeader("Expires", 0); // Fecha de expiracion en el pasado
 
-        System.out.println("🔒 Headers de seguridad configurados - Cache deshabilitado");
+        System.out.println("Headers de seguridad configurados - Cache deshabilitado");
 
-        // 🏠 REDIRIGIR AL LOGIN CON INTERFAZ LIMPIA
+        // Redirigir al login con interfaz limpia
         response.sendRedirect("index.jsp");
-        System.out.println("➡️ Usuario redirigido a página de login");
+        System.out.println("Usuario redirigido a pagina de login");
     }
 }

@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA ADMINISTRACIÓN DE DATOS DE PROFESORES
+ * SERVLET PARA ADMINISTRACION DE DATOS DE PROFESORES
  * 
- * Funcionalidades: CRUD completo de profesores, asignación a cursos
- * Roles: Administrador (gestión completa)
- * Integración: Relación con cursos y usuarios del sistema
+ * Funcionalidades: CRUD completo de profesores, asignacion a cursos
+ * Roles: Administrador (gestion completa)
+ * Integracion: Relacion con cursos y usuarios del sistema
  */
 package controlador;
 
@@ -17,14 +17,14 @@ import modelo.ProfesorDAO;
 @WebServlet("/ProfesorServlet")
 public class ProfesorServlet extends HttpServlet {
 
-    // 👨‍🏫 DAO PARA OPERACIONES CON LA TABLA DE PROFESORES
+    // DAO para operaciones con la tabla de profesores
     ProfesorDAO dao = new ProfesorDAO();
 
     /**
-     * 📖 MÉTODO GET - CONSULTAS Y GESTIÓN DE PROFESORES
+     * METODO GET - CONSULTAS Y GESTION DE PROFESORES
      * 
      * Acciones soportadas:
-     * - listar: Mostrar todos los profesores (acción por defecto)
+     * - listar: Mostrar todos los profesores (accion por defecto)
      * - nuevo: Formulario para crear nuevo profesor
      * - editar: Formulario para modificar profesor existente
      * - eliminar: Eliminar profesor del sistema
@@ -35,17 +35,17 @@ public class ProfesorServlet extends HttpServlet {
 
         String accion = request.getParameter("accion");
 
-        // 📋 ACCIÓN POR DEFECTO: LISTAR TODOS LOS PROFESORES
+        // Accion por defecto: listar todos los profesores
         if (accion == null || accion.equals("listar")) {
             request.setAttribute("lista", dao.listar());
             request.getRequestDispatcher("profesores.jsp").forward(request, response);
             return;
         }
 
-        // 🎯 EJECUTAR ACCIÓN ESPECÍFICA SEGÚN PARÁMETRO
+        // Ejecutar accion especifica segun parametro
         switch (accion) {
             case "editar":
-                // ✏️ CARGAR FORMULARIO DE EDICIÓN DE PROFESOR
+                // Cargar formulario de edicion de profesor
                 int idEditar = Integer.parseInt(request.getParameter("id"));
                 Profesor p = dao.obtenerPorId(idEditar);
                 request.setAttribute("profesor", p);
@@ -53,55 +53,55 @@ public class ProfesorServlet extends HttpServlet {
                 break;
 
             case "eliminar":
-                // 🗑️ ELIMINAR PROFESOR DEL SISTEMA
+                // Eliminar profesor del sistema
                 int idEliminar = Integer.parseInt(request.getParameter("id"));
                 dao.eliminar(idEliminar);
                 response.sendRedirect("ProfesorServlet");
                 break;
                 
             case "nuevo":
-                // ➕ MOSTRAR FORMULARIO PARA NUEVO PROFESOR
+                // Mostrar formulario para nuevo profesor
                 request.getRequestDispatcher("profesorForm.jsp").forward(request, response);
                 break;
 
             default:
-                // 🔄 REDIRECCIÓN POR DEFECTO SI ACCIÓN NO RECONOCIDA
+                // Redireccion por defecto si accion no reconocida
                 response.sendRedirect("ProfesorServlet");
         }
     }
 
     /**
-     * 💾 MÉTODO POST - CREAR Y ACTUALIZAR PROFESORES
+     * METODO POST - CREAR Y ACTUALIZAR PROFESORES
      * 
-     * Maneja tanto la creación de nuevos profesores como la actualización
-     * de profesores existentes basado en el parámetro ID
+     * Maneja tanto la creacion de nuevos profesores como la actualizacion
+     * de profesores existentes basado en el parametro ID
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 📥 DETERMINAR SI ES CREACIÓN (id=0) O ACTUALIZACIÓN (id>0)
+        // Determinar si es creacion (id=0) o actualizacion (id>0)
         int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
                 ? Integer.parseInt(request.getParameter("id")) : 0;
 
-        // 🧩 CONSTRUIR OBJETO PROFESOR CON DATOS DEL FORMULARIO
+        // Construir objeto profesor con datos del formulario
         Profesor p = new Profesor();
         p.setNombres(request.getParameter("nombres"));
         p.setApellidos(request.getParameter("apellidos"));
         p.setCorreo(request.getParameter("correo"));
         p.setEspecialidad(request.getParameter("especialidad"));
 
-        // 💾 EJECUTAR OPERACIÓN EN BASE DE DATOS
+        // Ejecutar operacion en base de datos
         if (id == 0) {
-            dao.agregar(p); // 🆕 CREAR NUEVO REGISTRO
-            System.out.println("✅ Nuevo profesor creado: " + p.getNombres() + " " + p.getApellidos());
+            dao.agregar(p); // Crear nuevo registro
+            System.out.println("Nuevo profesor creado: " + p.getNombres() + " " + p.getApellidos());
         } else {
             p.setId(id);
-            dao.actualizar(p); // ✏️ ACTUALIZAR REGISTRO EXISTENTE
-            System.out.println("✅ Profesor actualizado: " + p.getNombres() + " " + p.getApellidos() + " (ID: " + id + ")");
+            dao.actualizar(p); // Actualizar registro existente
+            System.out.println("Profesor actualizado: " + p.getNombres() + " " + p.getApellidos() + " (ID: " + id + ")");
         }
 
-        // 🔄 REDIRIGIR A LA LISTA PRINCIPAL DE PROFESORES
+        // Redirigir a la lista principal de profesores
         response.sendRedirect("ProfesorServlet");
     }
 }

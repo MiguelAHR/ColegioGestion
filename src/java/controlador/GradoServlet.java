@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA GESTIÓN DE GRADOS ACADÉMICOS
+ * SERVLET PARA GESTION DE GRADOS ACADEMICOS
  * 
  * Funcionalidades: CRUD completo de grados (niveles educativos)
  * Roles: Administrador
- * Integración: Base para cursos y alumnos
+ * Integracion: Base para cursos y alumnos
  */
 package controlador;
 
@@ -17,14 +17,14 @@ import modelo.GradoDAO;
 @WebServlet("/GradoServlet")
 public class GradoServlet extends HttpServlet {
 
-    // 🎓 DAO PARA OPERACIONES CON LA TABLA DE GRADOS
+    // DAO para operaciones con la tabla de grados
     GradoDAO dao = new GradoDAO();
 
     /**
-     * 📖 MÉTODO GET - CONSULTAS Y NAVEGACIÓN DE GRADOS
+     * METODO GET - CONSULTAS Y NAVEGACION DE GRADOS
      * 
      * Acciones soportadas:
-     * - listar: Mostrar todos los grados (acción por defecto)
+     * - listar: Mostrar todos los grados (accion por defecto)
      * - editar: Formulario para modificar grado existente
      * - eliminar: Eliminar grado del sistema
      */
@@ -34,17 +34,17 @@ public class GradoServlet extends HttpServlet {
 
         String accion = request.getParameter("accion");
 
-        // 📋 ACCIÓN POR DEFECTO: LISTAR TODOS LOS GRADOS
+        // Accion por defecto: listar todos los grados
         if (accion == null || accion.isEmpty()) {
             request.setAttribute("lista", dao.listar());
             request.getRequestDispatcher("grados.jsp").forward(request, response);
             return;
         }
 
-        // 🎯 EJECUTAR ACCIÓN ESPECÍFICA
+        // Ejecutar accion especifica
         switch (accion) {
             case "editar":
-                // ✏️ CARGAR FORMULARIO DE EDICIÓN DE GRADO
+                // Cargar formulario de edicion de grado
                 int idEditar = Integer.parseInt(request.getParameter("id"));
                 Grado g = dao.obtenerPorId(idEditar);
                 request.setAttribute("grado", g);
@@ -52,48 +52,48 @@ public class GradoServlet extends HttpServlet {
                 break;
 
             case "eliminar":
-                // 🗑️ ELIMINAR GRADO DEL SISTEMA
+                // Eliminar grado del sistema
                 int idEliminar = Integer.parseInt(request.getParameter("id"));
                 dao.eliminar(idEliminar);
                 response.sendRedirect("GradoServlet");
                 break;
 
             default:
-                // 🔄 REDIRECCIÓN POR DEFECTO
+                // Redireccion por defecto
                 response.sendRedirect("GradoServlet");
         }
     }
 
     /**
-     * 💾 MÉTODO POST - CREAR Y ACTUALIZAR GRADOS
+     * METODO POST - CREAR Y ACTUALIZAR GRADOS
      * 
-     * Maneja el envío de formularios para crear nuevos grados
+     * Maneja el envio de formularios para crear nuevos grados
      * y actualizar grados existentes
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 📥 DETERMINAR SI ES CREACIÓN (id=0) O ACTUALIZACIÓN (id>0)
+        // Determinar si es creacion (id=0) o actualizacion (id>0)
         int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
                 ? Integer.parseInt(request.getParameter("id")) : 0;
 
-        // 🧩 CONSTRUIR OBJETO GRADO CON DATOS DEL FORMULARIO
+        // Construir objeto grado con datos del formulario
         Grado g = new Grado();
         g.setNombre(request.getParameter("nombre"));
         g.setNivel(request.getParameter("nivel"));
 
-        // 💾 EJECUTAR OPERACIÓN EN BASE DE DATOS
+        // Ejecutar operacion en base de datos
         if (id == 0) {
-            dao.agregar(g); // 🆕 CREAR NUEVO GRADO
-            System.out.println("✅ Nuevo grado creado: " + g.getNombre() + " (Nivel: " + g.getNivel() + ")");
+            dao.agregar(g); // Crear nuevo grado
+            System.out.println("Nuevo grado creado: " + g.getNombre() + " (Nivel: " + g.getNivel() + ")");
         } else {
             g.setId(id);
-            dao.actualizar(g); // ✏️ ACTUALIZAR GRADO EXISTENTE
-            System.out.println("✅ Grado actualizado: " + g.getNombre() + " (ID: " + id + ")");
+            dao.actualizar(g); // Actualizar grado existente
+            System.out.println("Grado actualizado: " + g.getNombre() + " (ID: " + id + ")");
         }
 
-        // 🔄 REDIRIGIR A LA LISTA PRINCIPAL DE GRADOS
+        // Redirigir a la lista principal de grados
         response.sendRedirect("GradoServlet");
     }
 }

@@ -1,3 +1,11 @@
+/*
+ * DAO PARA GESTION DE CURSOS ACADEMICOS
+ * 
+ * Funcionalidades:
+ * - CRUD completo de cursos
+ * - Consultas por grado y profesor
+ * - Gestion de asignacion de creditos
+ */
 package modelo;
 
 import conexion.Conexion;
@@ -6,7 +14,12 @@ import java.util.*;
 
 public class CursoDAO {
 
-    // Listar los cursos por grado usando un Stored Procedure
+    /**
+     * LISTAR CURSOS POR GRADO ACADEMICO
+     * 
+     * @param gradoId Identificador del grado
+     * @return Lista de cursos pertenecientes al grado especificado
+     */
     public List<Curso> listarPorGrado(int gradoId) {
         List<Curso> lista = new ArrayList<>();
         String sql = "{CALL obtener_cursos_por_grado(?)}";
@@ -26,14 +39,19 @@ public class CursoDAO {
                 lista.add(c);
             }
         } catch (Exception e) {
-            System.out.println("❌ Error al listar cursos por grado");
+            System.out.println("Error al listar cursos por grado");
             e.printStackTrace();
         }
 
         return lista;
     }
 
-    // Listar los cursos por profesor usando un Stored Procedure
+    /**
+     * LISTAR CURSOS ASIGNADOS A PROFESOR ESPECIFICO
+     * 
+     * @param profesorId Identificador del profesor
+     * @return Lista de cursos asignados al profesor
+     */
     public List<Curso> listarPorProfesor(int profesorId) {
         List<Curso> lista = new ArrayList<>();
         String sql = "{CALL obtener_cursos_por_profesor(?)}";
@@ -50,29 +68,32 @@ public class CursoDAO {
                 c.setGradoId(rs.getInt("grado_id"));
                 c.setProfesorId(rs.getInt("profesor_id"));
                 c.setGradoNombre(rs.getString("grado_nombre"));
-                // Agrega otros campos que necesites
                 lista.add(c);
                 
-                System.out.println("✅ Curso encontrado: " + c.getNombre() + " - Grado: " + c.getGradoNombre());
+                System.out.println("Curso encontrado: " + c.getNombre() + " - Grado: " + c.getGradoNombre());
             }
 
-            System.out.println("✅ Total cursos encontrados para profesor " + profesorId + ": " + lista.size());
+            System.out.println("Total cursos encontrados para profesor " + profesorId + ": " + lista.size());
 
         } catch (SQLException e) {
-            System.out.println("❌ Error SQL en listarPorProfesor:");
-            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("Error SQL en listarPorProfesor:");
+            System.out.println("   Codigo: " + e.getErrorCode());
             System.out.println("   Estado: " + e.getSQLState());
             System.out.println("   Mensaje: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("❌ Error general en listarPorProfesor:");
+            System.out.println("Error general en listarPorProfesor:");
             e.printStackTrace();
         }
 
         return lista;
     }
 
-    // Listar todos los cursos usando un Stored Procedure
+    /**
+     * LISTAR TODOS LOS CURSOS REGISTRADOS
+     * 
+     * @return Lista completa de cursos
+     */
     public List<Curso> listar() {
         List<Curso> lista = new ArrayList<>();
         String sql = "{CALL obtener_cursos()}";
@@ -92,14 +113,19 @@ public class CursoDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("❌ Error al listar cursos");
+            System.out.println("Error al listar cursos");
             e.printStackTrace();
         }
 
         return lista;
     }
 
-    // Obtener un curso por ID usando un Stored Procedure
+    /**
+     * OBTENER CURSO POR ID
+     * 
+     * @param id Identificador unico del curso
+     * @return Objeto Curso con datos completos o null si no existe
+     */
     public Curso obtenerPorId(int id) {
         Curso c = null;
         String sql = "{CALL obtener_curso_por_id(?)}";
@@ -119,14 +145,19 @@ public class CursoDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener curso por ID");
+            System.out.println("Error al obtener curso por ID");
             e.printStackTrace();
         }
 
         return c;
     }
 
-    // Agregar un curso usando un Stored Procedure
+    /**
+     * AGREGAR NUEVO CURSO
+     * 
+     * @param c Objeto Curso con datos del nuevo curso
+     * @return true si la creacion fue exitosa
+     */
     public boolean agregar(Curso c) {
         String sql = "{CALL crear_curso(?, ?, ?, ?)}";
         try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
@@ -139,13 +170,18 @@ public class CursoDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al agregar curso");
+            System.out.println("Error al agregar curso");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Actualizar un curso usando un Stored Procedure
+    /**
+     * ACTUALIZAR DATOS DE CURSO EXISTENTE
+     * 
+     * @param c Objeto Curso con datos actualizados
+     * @return true si la actualizacion fue exitosa
+     */
     public boolean actualizar(Curso c) {
         String sql = "{CALL actualizar_curso(?, ?, ?, ?, ?)}";
         try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
@@ -159,13 +195,18 @@ public class CursoDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al actualizar curso");
+            System.out.println("Error al actualizar curso");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Eliminar un curso usando un Stored Procedure
+    /**
+     * ELIMINAR CURSO POR ID
+     * 
+     * @param id Identificador del curso a eliminar
+     * @return true si la eliminacion fue exitosa
+     */
     public boolean eliminar(int id) {
         String sql = "{CALL eliminar_curso(?)}";
         try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
@@ -174,23 +215,27 @@ public class CursoDAO {
             return cs.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("❌ Error al eliminar curso");
+            System.out.println("Error al eliminar curso");
             e.printStackTrace();
             return false;
         }
     }
     
-    // MÉTODOS ADICIONALES PARA COMPATIBILIDAD
-    
     /**
-     * Método alternativo para obtener cursos por profesor - usa el mismo stored procedure
+     * METODO ALTERNATIVO PARA OBTENER CURSOS POR PROFESOR
+     * 
+     * @param profesorId Identificador del profesor
+     * @return Lista de cursos asignados al profesor
      */
     public List<Curso> obtenerCursosPorProfesor(int profesorId) {
         return listarPorProfesor(profesorId);
     }
     
     /**
-     * Método alternativo para obtener curso por ID - usa el mismo stored procedure
+     * METODO ALTERNATIVO PARA OBTENER CURSO POR ID
+     * 
+     * @param cursoId Identificador del curso
+     * @return Objeto Curso con datos completos
      */
     public Curso obtenerCursoPorId(int cursoId) {
         return obtenerPorId(cursoId);

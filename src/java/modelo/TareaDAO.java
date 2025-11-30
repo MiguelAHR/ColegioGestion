@@ -1,6 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * DAO PARA GESTION DE TAREAS ACADEMICAS
+ * 
+ * Funcionalidades:
+ * - CRUD completo de tareas
+ * - Consultas por alumno y curso
+ * - Gestion de fechas de entrega
  */
 package modelo;
 
@@ -10,7 +14,12 @@ import java.util.*;
 
 public class TareaDAO {
 
-    // Agregar una tarea usando un Stored Procedure
+    /**
+     * AGREGAR NUEVA TAREA ACADEMICA
+     * 
+     * @param t Objeto Tarea con datos completos
+     * @return true si la creacion fue exitosa
+     */
     public boolean agregar(Tarea t) {
         String sql = "{CALL crear_tarea(?, ?, ?, ?, ?)}";
 
@@ -23,13 +32,18 @@ public class TareaDAO {
 
             return cs.executeUpdate() > 0;
         } catch (Exception e) {
-            System.out.println("❌ Error al agregar tarea");
+            System.out.println("Error al agregar tarea");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Actualizar una tarea usando un Stored Procedure
+    /**
+     * ACTUALIZAR TAREA EXISTENTE
+     * 
+     * @param t Objeto Tarea con datos actualizados
+     * @return true si la actualizacion fue exitosa
+     */
     public boolean actualizar(Tarea t) {
         String sql = "{CALL actualizar_tarea(?, ?, ?, ?, ?, ?)}";
 
@@ -43,13 +57,18 @@ public class TareaDAO {
 
             return cs.executeUpdate() > 0;
         } catch (Exception e) {
-            System.out.println("❌ Error al actualizar tarea");
+            System.out.println("Error al actualizar tarea");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Eliminar una tarea usando un Stored Procedure
+    /**
+     * ELIMINAR TAREA POR ID
+     * 
+     * @param id Identificador de la tarea
+     * @return true si la eliminacion fue exitosa
+     */
     public boolean eliminar(int id) {
         String sql = "{CALL eliminar_tarea(?)}";
 
@@ -57,13 +76,18 @@ public class TareaDAO {
             cs.setInt(1, id);
             return cs.executeUpdate() > 0;
         } catch (Exception e) {
-            System.out.println("❌ Error al eliminar tarea");
+            System.out.println("Error al eliminar tarea");
             e.printStackTrace();
             return false;
         }
     }
 
-    // Obtener una tarea por ID usando un Stored Procedure
+    /**
+     * OBTENER TAREA POR ID
+     * 
+     * @param id Identificador de la tarea
+     * @return Objeto Tarea con datos completos o null si no existe
+     */
     public Tarea obtenerPorId(int id) {
         Tarea t = null;
         String sql = "{CALL obtener_tarea_por_id(?)}";
@@ -88,7 +112,12 @@ public class TareaDAO {
         return t;
     }
 
-    // Listar tareas por alumno usando un Stored Procedure
+    /**
+     * LISTAR TAREAS POR ALUMNO ESPECIFICO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @return Lista de tareas asignadas al alumno
+     */
     public List<Tarea> listarPorAlumno(int alumnoId) {
         List<Tarea> lista = new ArrayList<>();
         String sql = "{CALL obtener_tareas_por_alumno(?)}";
@@ -109,14 +138,19 @@ public class TareaDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("❌ Error al listar tareas por alumno");
+            System.out.println("Error al listar tareas por alumno");
             e.printStackTrace();
         }
 
         return lista;
     }
 
-    // Listar tareas por curso usando un Stored Procedure
+    /**
+     * LISTAR TAREAS POR CURSO ESPECIFICO
+     * 
+     * @param cursoId Identificador del curso
+     * @return Lista de tareas del curso solicitado
+     */
     public List<Tarea> listarPorCurso(int cursoId) {
         List<Tarea> lista = new ArrayList<>();
         String sql = "{CALL obtener_tareas_por_curso(?)}";
@@ -137,11 +171,10 @@ public class TareaDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("❌ Error al listar tareas por curso");
+            System.out.println("Error al listar tareas por curso");
             e.printStackTrace();
         }
 
         return lista;
     }
 }
-

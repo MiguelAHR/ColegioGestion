@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA SUBIDA DE IMÁGENES AL ÁLBUM DEL ALUMNO
+ * SERVLET PARA SUBIDA DE IMAGENES AL ALBUM DEL ALUMNO
  * 
- * Funcionalidades: Subir imágenes, almacenar en sistema de archivos y BD
+ * Funcionalidades: Subir imagenes, almacenar en sistema de archivos y BD
  * Roles: Padre
- * Integración: Relación con alumno y sistema de archivos
+ * Integracion: Relacion con alumno y sistema de archivos
  */
 package controlador;
 
@@ -25,32 +25,32 @@ public class UploadImageServlet extends HttpServlet {
     private static final String UPLOAD_DIR = "uploads";
 
     /**
-     * 💾 MÉTODO POST - SUBIR IMAGEN AL SERVIDOR
+     * METODO POST - SUBIR IMAGEN AL SERVIDOR
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // 📥 OBTENER DATOS DEL FORMULARIO
+        // Obtener datos del formulario
         int alumnoId = Integer.parseInt(req.getParameter("alumno_id"));
         Part filePart = req.getPart("imagen");
         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-        String uniqueName = System.currentTimeMillis() + "_" + fileName; // 🕒 NOMBRE ÚNICO
+        String uniqueName = System.currentTimeMillis() + "_" + fileName; // Nombre unico
 
-        // 📁 CREAR DIRECTORIO DE SUBIDAS SI NO EXISTE
+        // Crear directorio de subidas si no existe
         String appPath = req.getServletContext().getRealPath("");
         String uploadPath = appPath + File.separator + UPLOAD_DIR;
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) uploadDir.mkdirs();
 
-        // 💾 ESCRIBIR ARCHIVO EN EL SERVIDOR
+        // Escribir archivo en el servidor
         filePart.write(uploadPath + File.separator + uniqueName);
 
-        // 💾 GUARDAR RUTA EN BASE DE DATOS
+        // Guardar ruta en base de datos
         String dbPath = UPLOAD_DIR + "/" + uniqueName;
         new ImageDAO().guardarImagen(alumnoId, dbPath);
 
-        // 🔄 REDIRIGIR AL ÁLBUM DEL PADRE
+        // Redirigir al album del padre
         resp.sendRedirect("albumPadre.jsp");
     }
 }

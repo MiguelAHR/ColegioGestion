@@ -27,43 +27,43 @@ public class LoginServlet extends HttpServlet {
         String captchaInput = request.getParameter("captchaInput");
         String captchaHidden = request.getParameter("captchaHidden");
 
-        System.out.println("🔐 Intento de login con usuario: " + user);
+        System.out.println("Intento de login con usuario: " + user);
 
         try {
             // Primero desbloquear usuarios expirados
             usuarioDAO.desbloquearUsuariosExpirados(TIEMPO_BLOQUEO_MINUTOS);
 
-            // Verificar si el usuario está bloqueado
+            // Verificar si el usuario esta bloqueado
             if (usuarioDAO.estaBloqueado(user)) {
-                System.out.println("🚫 Usuario bloqueado detectado: " + user);
+                System.out.println("Usuario bloqueado detectado: " + user);
                 long tiempoRestante = calcularTiempoRestanteBloqueo(user);
-                String json = "{\"success\": false, \"error\": \"Usuario bloqueado. Intente más tarde.\", \"tipoError\": \"bloqueado\", \"tiempoRestante\": " + tiempoRestante + "}";
+                String json = "{\"success\": false, \"error\": \"Usuario bloqueado. Intente mas tarde.\", \"tipoError\": \"bloqueado\", \"tiempoRestante\": " + tiempoRestante + "}";
                 response.getWriter().write(json);
                 return;
             }
 
-            // ✅ PRIMERO VALIDAR CREDENCIALES SIN CAPTCHA
+            // Primero validar credenciales sin CAPTCHA
             boolean credencialesCorrectas = usuarioDAO.verificarCredencialesConHash(user, hashedPasswordFromFrontend);
             
             if (!credencialesCorrectas) {
-                System.out.println("❌ Credenciales incorrectas para: " + user);
+                System.out.println("Credenciales incorrectas para: " + user);
                 manejarCredencialesInvalidas(user, response);
                 return;
             }
 
-            // ✅ SI LAS CREDENCIALES SON CORRECTAS, ENTONCES VALIDAR CAPTCHA
-            System.out.println("✅ Credenciales correctas, validando CAPTCHA para: " + user);
+            // Si las credenciales son correctas, entonces validar CAPTCHA
+            System.out.println("Credenciales correctas, validando CAPTCHA para: " + user);
             
             if (captchaInput == null || captchaHidden == null || !captchaInput.trim().equals(captchaHidden.trim())) {
-                System.out.println("❌ CAPTCHA incorrecto o no proporcionado para: " + user);
-                String json = "{\"success\": false, \"error\": \"Código de verificación requerido\", \"tipoError\": \"requiere_captcha\"}";
+                System.out.println("CAPTCHA incorrecto o no proporcionado para: " + user);
+                String json = "{\"success\": false, \"error\": \"Codigo de verificacion requerido\", \"tipoError\": \"requiere_captcha\"}";
                 response.getWriter().write(json);
                 return;
             }
 
-            System.out.println("✅ CAPTCHA validado correctamente");
+            System.out.println("CAPTCHA validado correctamente");
 
-            // Si llegamos aquí, login exitoso
+            // Si llegamos aqui, login exitoso
             Usuario usuario = usuarioDAO.obtenerPorUsername(user);
             if (usuario == null) {
                 enviarJson(response, false, "Error del sistema. Contacte al administrador.", "sistema");
@@ -81,11 +81,11 @@ public class LoginServlet extends HttpServlet {
             if (redirectUrl != null) {
                 enviarJson(response, true, redirectUrl);
             } else {
-                enviarJson(response, false, "No se pudo determinar la redirección", "redireccion");
+                enviarJson(response, false, "No se pudo determinar la redireccion", "redireccion");
             }
 
         } catch (Exception e) {
-            System.err.println("💥 Error en el login:");
+            System.err.println("Error en el login:");
             e.printStackTrace();
             enviarJson(response, false, "Error interno del servidor", "sistema");
         }
@@ -95,7 +95,7 @@ public class LoginServlet extends HttpServlet {
         usuarioDAO.incrementarIntentoFallido(username);
         int intentosRestantes = getIntentosRestantes(username);
 
-        System.out.println("📊 Intentos restantes para " + username + ": " + intentosRestantes);
+        System.out.println("Intentos restantes para " + username + ": " + intentosRestantes);
 
         if (intentosRestantes <= 0) {
             usuarioDAO.bloquearUsuario(username);
@@ -113,7 +113,7 @@ public class LoginServlet extends HttpServlet {
         if (usuario != null) {
             int intentosUsados = usuario.getIntentosFallidos();
             int restantes = MAX_INTENTOS - intentosUsados;
-            System.out.println("🔢 Intentos usados: " + intentosUsados + ", Restantes: " + restantes);
+            System.out.println("Intentos usados: " + intentosUsados + ", Restantes: " + restantes);
             return Math.max(0, restantes);
         }
         return MAX_INTENTOS;
@@ -125,7 +125,7 @@ public class LoginServlet extends HttpServlet {
             long transcurrido = System.currentTimeMillis() - usuario.getFechaBloqueo().getTime();
             long total = TIEMPO_BLOQUEO_MINUTOS * 60 * 1000;
             long restante = Math.max(0, total - transcurrido);
-            System.out.println("⏰ Tiempo bloqueo restante para " + username + ": " + restante + "ms");
+            System.out.println("Tiempo bloqueo restante para " + username + ": " + restante + "ms");
             return restante;
         }
         return TIEMPO_BLOQUEO_MINUTOS * 60 * 1000;
@@ -150,7 +150,7 @@ public class LoginServlet extends HttpServlet {
         String accion = request.getParameter("accion");
         HttpSession session = request.getSession();
 
-        System.out.println("📨 GET Request - Acción: " + accion);
+        System.out.println("GET Request - Accion: " + accion);
 
         switch (accion != null ? accion : "") {
             case "verificarBloqueo":
@@ -177,10 +177,10 @@ public class LoginServlet extends HttpServlet {
         try {
             usuarioDAO.desbloquearUsuariosExpirados(TIEMPO_BLOQUEO_MINUTOS);
             boolean bloqueado = usuarioDAO.estaBloqueado(username);
-            System.out.println("🔍 Verificación bloqueo para " + username + ": " + bloqueado);
+            System.out.println("Verificacion bloqueo para " + username + ": " + bloqueado);
             response.getWriter().write("{\"bloqueado\": " + bloqueado + "}");
         } catch (Exception e) {
-            System.err.println("❌ Error verificando bloqueo: " + e.getMessage());
+            System.err.println("Error verificando bloqueo: " + e.getMessage());
             response.getWriter().write("{\"bloqueado\": true}");
         }
     }
@@ -196,7 +196,7 @@ public class LoginServlet extends HttpServlet {
             String mensaje = esFuerte ? "Contraseña segura" : ValidacionContraseña.obtenerRequisitosPassword();
             response.getWriter().write("{\"esFuerte\": " + esFuerte + ", \"mensaje\": \"" + mensaje + "\"}");
         } catch (Exception e) {
-            System.err.println("❌ Error validando password: " + e.getMessage());
+            System.err.println("Error validando password: " + e.getMessage());
             response.getWriter().write("{\"esFuerte\": false, \"mensaje\": \"Error al validar contraseña\"}");
         }
     }
@@ -228,29 +228,29 @@ public class LoginServlet extends HttpServlet {
     }
 
     private String determinarRedireccion(String rol, String user, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        System.out.println("📍 Determinando redireccion para rol: " + rol + ", usuario: " + user);
+        System.out.println("Determinando redireccion para rol: " + rol + ", usuario: " + user);
 
         if ("admin".equalsIgnoreCase(rol)) {
             return "dashboard.jsp";
         }
 
         if ("docente".equalsIgnoreCase(rol)) {
-            System.out.println("👨‍🏫 Buscando datos del docente: " + user);
+            System.out.println("Buscando datos del docente: " + user);
             modelo.Profesor docente = new modelo.ProfesorDAO().obtenerPorUsername(user);
 
             if (docente != null) {
                 HttpSession session = request.getSession();
                 session.setAttribute("docente", docente);
-                System.out.println("✅ Docente encontrado: " + docente.getNombres() + " " + docente.getApellidos());
+                System.out.println("Docente encontrado: " + docente.getNombres() + " " + docente.getApellidos());
 
                 java.util.List<modelo.Curso> misCursos = new modelo.CursoDAO().listarPorProfesor(docente.getId());
                 session.setAttribute("misCursos", misCursos);
-                System.out.println("📚 Cursos cargados: " + (misCursos != null ? misCursos.size() : 0));
+                System.out.println("Cursos cargados: " + (misCursos != null ? misCursos.size() : 0));
 
                 return "docenteDashboard.jsp";
             } else {
-                System.out.println("❌ No se encontró información del docente para: " + user);
-                return "index.jsp?error=No se encontró información del docente";
+                System.out.println("No se encontro informacion del docente para: " + user);
+                return "index.jsp?error=No se encontro informacion del docente";
             }
         }
 
@@ -264,7 +264,7 @@ public class LoginServlet extends HttpServlet {
             }
         }
 
-        System.out.println("⚠️ Rol no reconocido: " + rol);
+        System.out.println("Rol no reconocido: " + rol);
         return "index.jsp?error=rol_no_reconocido";
     }
 }

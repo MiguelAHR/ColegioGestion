@@ -1,3 +1,12 @@
+/*
+ * DAO PARA GESTION DE ASISTENCIAS ESCOLARES
+ * 
+ * Funcionalidades:
+ * - Registro individual y grupal de asistencias
+ * - Consultas por curso, alumno y fecha
+ * - Reportes y resumenes estadisticos
+ * - Gestion de ausencias por justificar
+ */
 package modelo;
 
 import conexion.Conexion;
@@ -6,6 +15,12 @@ import java.util.*;
 
 public class AsistenciaDAO {
 
+    /**
+     * REGISTRAR ASISTENCIA INDIVIDUAL
+     * 
+     * @param a Objeto Asistencia con datos completos
+     * @return true si el registro fue exitoso
+     */
     public boolean registrarAsistencia(Asistencia a) {
         String sql = "{CALL registrar_asistencia(?, ?, ?, ?, ?, ?, ?, ?)}";
 
@@ -21,25 +36,36 @@ public class AsistenciaDAO {
             cs.setInt(8, a.getRegistradoPor());
 
             int resultado = cs.executeUpdate();
-            System.out.println("✅ Asistencia registrada. Filas afectadas: " + resultado);
+            System.out.println("Asistencia registrada. Filas afectadas: " + resultado);
             return resultado > 0;
 
         } catch (SQLException e) {
-            System.out.println("❌ Error SQL al registrar asistencia:");
-            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("Error SQL al registrar asistencia:");
+            System.out.println("   Codigo: " + e.getErrorCode());
             System.out.println("   Estado: " + e.getSQLState());
             System.out.println("   Mensaje: " + e.getMessage());
             e.printStackTrace();
             return false;
         } catch (Exception e) {
-            System.out.println("❌ Error general al registrar asistencia");
+            System.out.println("Error general al registrar asistencia");
             e.printStackTrace();
             return false;
         }
     }
 
+    /**
+     * REGISTRAR ASISTENCIAS GRUPALES (MULTIPLES ALUMNOS)
+     * 
+     * @param cursoId Identificador del curso
+     * @param turnoId Identificador del turno
+     * @param fecha Fecha de la asistencia
+     * @param horaClase Hora de la clase
+     * @param alumnosJson Datos de alumnos en formato JSON
+     * @param registradoPor ID del usuario que registra
+     * @return true si al menos un registro fue exitoso
+     */
     public boolean registrarAsistenciaGrupal(int cursoId, int turnoId, String fecha, String horaClase, String alumnosJson, int registradoPor) {
-        System.out.println("=== 🟡 INICIANDO DAO REGISTRO GRUPAL ===");
+        System.out.println("INICIANDO DAO REGISTRO GRUPAL");
         System.out.println("   cursoId: " + cursoId);
         System.out.println("   turnoId: " + turnoId);
         System.out.println("   fecha: " + fecha);
@@ -51,17 +77,17 @@ public class AsistenciaDAO {
 
         try {
             con = Conexion.getConnection();
-            con.setAutoCommit(false); // Iniciar transacción
+            con.setAutoCommit(false); // Iniciar transaccion
 
             // Validar JSON
             if (alumnosJson == null || alumnosJson.trim().isEmpty()) {
-                System.out.println("❌ ERROR: JSON de alumnos está vacío");
+                System.out.println("ERROR: JSON de alumnos esta vacio");
                 return false;
             }
 
             String jsonContent = alumnosJson.trim();
             if (!jsonContent.startsWith("[") || !jsonContent.endsWith("]")) {
-                System.out.println("❌ ERROR: Formato JSON inválido - no es un array");
+                System.out.println("ERROR: Formato JSON invalido - no es un array");
                 return false;
             }
 
@@ -69,9 +95,9 @@ public class AsistenciaDAO {
             String contenido = jsonContent.substring(1, jsonContent.length() - 1);
             String[] objetos = contenido.split("\\},\\{");
 
-            System.out.println("📊 Total de alumnos a procesar: " + objetos.length);
+            System.out.println("Total de alumnos a procesar: " + objetos.length);
 
-            // ✅ CORREGIDO: Preparar el stored procedure con 8 parámetros
+            // Preparar el stored procedure con 8 parametros
             String sql = "{CALL registrar_asistencia(?, ?, ?, ?, ?, ?, ?, ?)}";
             cs = con.prepareCall(sql);
 
@@ -85,7 +111,7 @@ public class AsistenciaDAO {
                     objeto = objeto.substring(1); // Quitar { inicial del primer objeto
                 }
                 if (i == objetos.length - 1) {
-                    objeto = objeto.substring(0, objeto.length() - 1); // Quitar } final del último objeto
+                    objeto = objeto.substring(0, objeto.length() - 1); // Quitar } final del ultimo objeto
                 }
                 // Parsear manualmente
                 int alumnoId = 0;
@@ -107,75 +133,75 @@ public class AsistenciaDAO {
                         }
                     }
 
-                    System.out.println("   👤 Procesando alumno " + alumnoId + " - Estado: " + estado);
+                    System.out.println("   Procesando alumno " + alumnoId + " - Estado: " + estado);
 
                     // Validar datos
                     if (alumnoId <= 0 || estado.isEmpty()) {
-                        System.out.println("   ⚠️  Datos inválidos para alumno, saltando...");
+                        System.out.println("   Datos invalidos para alumno, saltando...");
                         errores++;
                         continue;
                     }
 
-                    // ✅ CORREGIDO: Ejecutar stored procedure con 8 parámetros
+                    // Ejecutar stored procedure con 8 parametros
                     cs.setInt(1, alumnoId);
                     cs.setInt(2, cursoId);
                     cs.setInt(3, turnoId);
                     cs.setString(4, fecha);
                     cs.setString(5, horaClase);
                     cs.setString(6, estado);
-                    cs.setString(7, ""); // Observaciones vacías para registro grupal
+                    cs.setString(7, ""); // Observaciones vacias para registro grupal
                     cs.setInt(8, registradoPor);
 
                     int resultado = cs.executeUpdate();
                     if (resultado > 0) {
                         exitosos++;
-                        System.out.println("   💾 Alumno " + alumnoId + " guardado exitosamente");
+                        System.out.println("   Alumno " + alumnoId + " guardado exitosamente");
                     } else {
                         errores++;
-                        System.out.println("   ❌ Alumno " + alumnoId + " no se pudo guardar (resultado: " + resultado + ")");
+                        System.out.println("   Alumno " + alumnoId + " no se pudo guardar (resultado: " + resultado + ")");
                     }
 
                 } catch (Exception e) {
                     errores++;
-                    System.out.println("   ❌ Error procesando alumno: " + e.getMessage());
+                    System.out.println("   Error procesando alumno: " + e.getMessage());
                     // Continuar con el siguiente alumno
                 }
             }
 
-            // Confirmar transacción
+            // Confirmar transaccion
             con.commit();
-            System.out.println("✅ Transacción completada. Exitosos: " + exitosos + ", Errores: " + errores + ", Total: " + objetos.length);
+            System.out.println("Transaccion completada. Exitosos: " + exitosos + ", Errores: " + errores + ", Total: " + objetos.length);
 
-            return exitosos > 0; // Retorna true si al menos uno se guardó
+            return exitosos > 0; // Retorna true si al menos uno se guardo
 
         } catch (SQLException e) {
-            System.out.println("❌ ERROR SQL en transacción: " + e.getMessage());
+            System.out.println("ERROR SQL en transaccion: " + e.getMessage());
             System.out.println("   SQL State: " + e.getSQLState());
             System.out.println("   Error Code: " + e.getErrorCode());
             e.printStackTrace();
 
-            // Revertir transacción
+            // Revertir transaccion
             if (con != null) {
                 try {
                     con.rollback();
-                    System.out.println("🔄 Transacción revertida debido a error");
+                    System.out.println("Transaccion revertida debido a error");
                 } catch (SQLException ex) {
-                    System.out.println("❌ Error al revertir transacción: " + ex.getMessage());
+                    System.out.println("Error al revertir transaccion: " + ex.getMessage());
                 }
             }
             return false;
 
         } catch (Exception e) {
-            System.out.println("❌ ERROR general en transacción: " + e.getMessage());
+            System.out.println("ERROR general en transaccion: " + e.getMessage());
             e.printStackTrace();
 
-            // Revertir transacción
+            // Revertir transaccion
             if (con != null) {
                 try {
                     con.rollback();
-                    System.out.println("🔄 Transacción revertida debido a error general");
+                    System.out.println("Transaccion revertida debido a error general");
                 } catch (SQLException ex) {
-                    System.out.println("❌ Error al revertir transacción: " + ex.getMessage());
+                    System.out.println("Error al revertir transaccion: " + ex.getMessage());
                 }
             }
             return false;
@@ -191,12 +217,14 @@ public class AsistenciaDAO {
                     con.close();
                 }
             } catch (SQLException e) {
-                System.out.println("❌ Error cerrando recursos: " + e.getMessage());
+                System.out.println("Error cerrando recursos: " + e.getMessage());
             }
         }
     }
 
-    // ✅ CORREGIDO: Método auxiliar con 8 parámetros
+    /**
+     * METODO AUXILIAR PARA GUARDAR ASISTENCIA INDIVIDUAL
+     */
     private boolean guardarAsistenciaIndividual(int alumnoId, int cursoId, int turnoId, String fecha, String horaClase, String estado, int registradoPor) {
         String sql = "{CALL registrar_asistencia(?, ?, ?, ?, ?, ?, ?, ?)}";
 
@@ -208,22 +236,30 @@ public class AsistenciaDAO {
             cs.setString(4, fecha);
             cs.setString(5, horaClase);
             cs.setString(6, estado);
-            cs.setString(7, ""); // Observaciones vacías
+            cs.setString(7, ""); // Observaciones vacias
             cs.setInt(8, registradoPor);
 
             int resultado = cs.executeUpdate();
-            System.out.println("   💾 Alumno " + alumnoId + " guardado: " + (resultado > 0));
+            System.out.println("   Alumno " + alumnoId + " guardado: " + (resultado > 0));
             return resultado > 0;
 
         } catch (SQLException e) {
-            System.out.println("❌ Error SQL al guardar alumno " + alumnoId + ": " + e.getMessage());
+            System.out.println("Error SQL al guardar alumno " + alumnoId + ": " + e.getMessage());
             return false;
         } catch (Exception e) {
-            System.out.println("❌ Error general al guardar alumno " + alumnoId + ": " + e.getMessage());
+            System.out.println("Error general al guardar alumno " + alumnoId + ": " + e.getMessage());
             return false;
         }
     }
 
+    /**
+     * OBTENER ASISTENCIAS POR CURSO, TURNO Y FECHA
+     * 
+     * @param cursoId Identificador del curso
+     * @param turnoId Identificador del turno
+     * @param fecha Fecha de consulta
+     * @return Lista de asistencias que coinciden con los criterios
+     */
     public List<Asistencia> obtenerAsistenciasPorCursoTurnoFecha(int cursoId, int turnoId, String fecha) {
         List<Asistencia> lista = new ArrayList<>();
         String sql = "{CALL obtener_asistencias_por_curso_turno_fecha(?, ?, ?)}";
@@ -252,22 +288,31 @@ public class AsistenciaDAO {
                 lista.add(a);
             }
 
-            System.out.println("✅ Asistencias encontradas: " + lista.size());
+            System.out.println("Asistencias encontradas: " + lista.size());
 
         } catch (SQLException e) {
-            System.out.println("❌ Error SQL al obtener asistencias por curso, turno y fecha:");
-            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("Error SQL al obtener asistencias por curso, turno y fecha:");
+            System.out.println("   Codigo: " + e.getErrorCode());
             System.out.println("   Estado: " + e.getSQLState());
             System.out.println("   Mensaje: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("❌ Error general al obtener asistencias por curso, turno y fecha");
+            System.out.println("Error general al obtener asistencias por curso, turno y fecha");
             e.printStackTrace();
         }
 
         return lista;
     }
 
+    /**
+     * OBTENER ASISTENCIAS POR ALUMNO Y TURNO EN PERIODO ESPECIFICO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @param turnoId Identificador del turno
+     * @param mes Mes del periodo
+     * @param anio Ano del periodo
+     * @return Lista de asistencias del alumno en el periodo especificado
+     */
     public List<Asistencia> obtenerAsistenciasPorAlumnoTurno(int alumnoId, int turnoId, int mes, int anio) {
         List<Asistencia> lista = new ArrayList<>();
         String sql = "{CALL obtener_asistencias_por_alumno_turno(?, ?, ?, ?)}";
@@ -297,27 +342,33 @@ public class AsistenciaDAO {
                 lista.add(a);
             }
 
-            System.out.println("✅ Asistencias por alumno encontradas: " + lista.size());
+            System.out.println("Asistencias por alumno encontradas: " + lista.size());
 
         } catch (SQLException e) {
-            System.out.println("❌ Error SQL al obtener asistencias por alumno y turno:");
-            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("Error SQL al obtener asistencias por alumno y turno:");
+            System.out.println("   Codigo: " + e.getErrorCode());
             System.out.println("   Estado: " + e.getSQLState());
             System.out.println("   Mensaje: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("❌ Error general al obtener asistencias por alumno y turno");
+            System.out.println("Error general al obtener asistencias por alumno y turno");
             e.printStackTrace();
         }
 
         return lista;
     }
 
+    /**
+     * OBTENER AUSENCIAS POR JUSTIFICAR DE ALUMNO ESPECIFICO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @return Lista de ausencias que requieren justificacion
+     */
     public List<Asistencia> obtenerAusenciasPorJustificar(int alumnoId) {
         List<Asistencia> lista = new ArrayList<>();
         String sql = "{CALL obtener_ausencias_por_justificar(?)}";
 
-        System.out.println("🔍 Ejecutando stored procedure para alumno_id: " + alumnoId);
+        System.out.println("Ejecutando stored procedure para alumno_id: " + alumnoId);
 
         try (Connection con = Conexion.getConnection(); CallableStatement cs = con.prepareCall(sql)) {
 
@@ -336,25 +387,34 @@ public class AsistenciaDAO {
                 a.setAlumnoId(rs.getInt("alumno_id"));
                 lista.add(a);
 
-                System.out.println("📅 Ausencia encontrada: " + a.getFecha() + " - " + a.getCursoNombre());
+                System.out.println("Ausencia encontrada: " + a.getFecha() + " - " + a.getCursoNombre());
             }
 
-            System.out.println("✅ Total de ausencias encontradas: " + count);
+            System.out.println("Total de ausencias encontradas: " + count);
 
         } catch (SQLException e) {
-            System.out.println("❌ Error SQL al obtener ausencias por justificar:");
-            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("Error SQL al obtener ausencias por justificar:");
+            System.out.println("   Codigo: " + e.getErrorCode());
             System.out.println("   Estado: " + e.getSQLState());
             System.out.println("   Mensaje: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("❌ Error general al obtener ausencias por justificar para alumno: " + alumnoId);
+            System.out.println("Error general al obtener ausencias por justificar para alumno: " + alumnoId);
             e.printStackTrace();
         }
 
         return lista;
     }
 
+    /**
+     * OBTENER RESUMEN ESTADISTICO DE ASISTENCIA POR ALUMNO Y TURNO
+     * 
+     * @param alumnoId Identificador del alumno
+     * @param turnoId Identificador del turno
+     * @param mes Mes del periodo
+     * @param anio Ano del periodo
+     * @return Mapa con estadisticas de asistencia del alumno
+     */
     public Map<String, Object> obtenerResumenAsistenciaAlumnoTurno(int alumnoId, int turnoId, int mes, int anio) {
         Map<String, Object> resumen = new HashMap<>();
         String sql = "{CALL obtener_resumen_asistencia_alumno_turno(?, ?, ?, ?)}";
@@ -375,17 +435,17 @@ public class AsistenciaDAO {
                 resumen.put("justificados", rs.getInt("justificados"));
                 resumen.put("porcentajeAsistencia", rs.getDouble("porcentaje_asistencia"));
 
-                System.out.println("✅ Resumen obtenido - Asistencia: " + rs.getDouble("porcentaje_asistencia") + "%");
+                System.out.println("Resumen obtenido - Asistencia: " + rs.getDouble("porcentaje_asistencia") + "%");
             }
 
         } catch (SQLException e) {
-            System.out.println("❌ Error SQL al obtener resumen de asistencia:");
-            System.out.println("   Código: " + e.getErrorCode());
+            System.out.println("Error SQL al obtener resumen de asistencia:");
+            System.out.println("   Codigo: " + e.getErrorCode());
             System.out.println("   Estado: " + e.getSQLState());
             System.out.println("   Mensaje: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("❌ Error general al obtener resumen de asistencia");
+            System.out.println("Error general al obtener resumen de asistencia");
             e.printStackTrace();
         }
 

@@ -3,7 +3,7 @@
  * 
  * Funcionalidades: Listar observaciones del alumno para vista de padres
  * Roles: Padre
- * Integración: Relación con alumno y cursos
+ * Integracion: Relacion con alumno y cursos
  */
 package controlador;
 
@@ -19,7 +19,7 @@ import java.util.List;
 public class ObservacionesPadreServlet extends HttpServlet {
 
     /**
-     * 📖 MÉTODO GET - LISTAR OBSERVACIONES DEL ALUMNO (VISTA PADRES)
+     * METODO GET - LISTAR OBSERVACIONES DEL ALUMNO (VISTA PADRES)
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -28,18 +28,18 @@ public class ObservacionesPadreServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Padre padre = (Padre) session.getAttribute("padre");
 
-        // 🔐 VERIFICAR AUTENTICACIÓN Y DATOS DE PADRE
+        // Verificar autenticacion y datos de padre
         if (padre == null) {
             response.sendRedirect("index.jsp");
             return;
         }
 
-        // 📝 OBTENER OBSERVACIONES DEL ALUMNO DESDE LA BASE DE DATOS
+        // Obtener observaciones del alumno desde la base de datos
         ObservacionDAO dao = new ObservacionDAO();
         List<Observacion> lista = dao.listarPorAlumno(padre.getAlumnoId());
         request.setAttribute("observaciones", lista);
 
-        // 🎯 CARGAR VISTA ESPECÍFICA PARA PADRES
+        // Cargar vista especifica para padres
         request.getRequestDispatcher("observacionesPadre.jsp").forward(request, response);
     }
 }

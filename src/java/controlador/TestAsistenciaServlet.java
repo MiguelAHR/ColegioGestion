@@ -1,8 +1,8 @@
 /*
- * SERVLET DE PRUEBA PARA VERIFICAR RECEPCIÓN DE DATOS DE ASISTENCIA
+ * SERVLET DE PRUEBA PARA VERIFICAR RECEPCION DE DATOS DE ASISTENCIA
  * 
- * Propósito: Probar el envío de datos desde el formulario de asistencias
- * Uso: Solo para desarrollo, remover en producción
+ * Proposito: Probar el envio de datos desde el formulario de asistencias
+ * Uso: Solo para desarrollo, remover en produccion
  */
 package controlador;
 
@@ -18,25 +18,25 @@ import javax.servlet.http.HttpServletResponse;
 public class TestAsistenciaServlet extends HttpServlet {
     
     /**
-     * 🧪 MÉTODO POST - PROBAR RECEPCIÓN DE DATOS DE ASISTENCIA
+     * METODO POST - PROBAR RECEPCION DE DATOS DE ASISTENCIA
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        System.out.println("=== 🧪 TEST SERVLET INICIADO ===");
-        System.out.println("📨 Parámetros recibidos:");
+        System.out.println("TEST SERVLET INICIADO");
+        System.out.println("Parametros recibidos:");
         
-        // 📝 MOSTRAR TODOS LOS PARÁMETROS RECIBIDOS
+        // Mostrar todos los parametros recibidos
         request.getParameterMap().forEach((key, values) -> {
             System.out.println("   " + key + ": " + String.join(", ", values));
         });
         
-        // 📦 MOSTRAR EL JSON DE ALUMNOS (PARCIAL POR LOGS)
+        // Mostrar el JSON de alumnos (parcial por logs)
         String alumnosJson = request.getParameter("alumnos_json");
-        System.out.println("📦 alumnos_json: " + (alumnosJson != null ? alumnosJson.substring(0, Math.min(200, alumnosJson.length())) + "..." : "NULL"));
+        System.out.println("alumnos_json: " + (alumnosJson != null ? alumnosJson.substring(0, Math.min(200, alumnosJson.length())) + "..." : "NULL"));
         
-        // 📤 RESPONDER CON JSON DE ÉXITO
+        // Responder con JSON de exito
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         
@@ -44,6 +44,6 @@ public class TestAsistenciaServlet extends HttpServlet {
         out.print("{\"status\":\"success\",\"message\":\"Test recibido correctamente\"}");
         out.flush();
         
-        System.out.println("=== ✅ TEST SERVLET FINALIZADO ===");
+        System.out.println("TEST SERVLET FINALIZADO");
     }
 }

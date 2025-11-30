@@ -1,9 +1,9 @@
 /*
- * SERVLET PARA ELIMINACIÓN DE IMÁGENES DEL ÁLBUM
+ * SERVLET PARA ELIMINACION DE IMAGENES DEL ALBUM
  * 
- * Funcionalidades: Eliminar imágenes del sistema de archivos y BD
+ * Funcionalidades: Eliminar imagenes del sistema de archivos y BD
  * Roles: Padre
- * Integración: Relación con alumno y sistema de archivos
+ * Integracion: Relacion con alumno y sistema de archivos
  */
 package controlador;
 
@@ -18,7 +18,7 @@ import java.io.IOException;
 public class DeleteImageServlet extends HttpServlet {
     
     /**
-     * 🗑️ MÉTODO POST - ELIMINAR IMAGEN
+     * METODO POST - ELIMINAR IMAGEN
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -26,13 +26,13 @@ public class DeleteImageServlet extends HttpServlet {
         String idParam = request.getParameter("id");
         int imgId = idParam != null ? Integer.parseInt(idParam) : 0;
 
-        // 📁 OBTENER RUTA ABSOLUTA AL DIRECTORIO DE LA APLICACIÓN
+        // Obtener ruta absoluta al directorio de la aplicacion
         String contextPath = getServletContext().getRealPath("/");
 
-        // 🗑️ ELIMINAR IMAGEN (ARCHIVO Y REGISTRO BD)
+        // Eliminar imagen (archivo y registro BD)
         boolean ok = new ImageDAO().eliminarImagen(imgId, contextPath);
         
-        // 🔄 REDIRIGIR AL ÁLBUM
+        // Redirigir al album
         response.sendRedirect("albumPadre.jsp");
     }
 }
