@@ -1,11 +1,3 @@
-/*
- * DAO PARA GESTION DE CURSOS ACADEMICOS
- * 
- * Funcionalidades:
- * - CRUD completo de cursos
- * - Consultas por grado y profesor
- * - Gestion de asignacion de creditos
- */
 package modelo;
 
 import conexion.Conexion;
@@ -16,9 +8,6 @@ public class CursoDAO {
 
     /**
      * LISTAR CURSOS POR GRADO ACADEMICO
-     * 
-     * @param gradoId Identificador del grado
-     * @return Lista de cursos pertenecientes al grado especificado
      */
     public List<Curso> listarPorGrado(int gradoId) {
         List<Curso> lista = new ArrayList<>();
@@ -48,9 +37,6 @@ public class CursoDAO {
 
     /**
      * LISTAR CURSOS ASIGNADOS A PROFESOR ESPECIFICO
-     * 
-     * @param profesorId Identificador del profesor
-     * @return Lista de cursos asignados al profesor
      */
     public List<Curso> listarPorProfesor(int profesorId) {
         List<Curso> lista = new ArrayList<>();
@@ -91,8 +77,6 @@ public class CursoDAO {
 
     /**
      * LISTAR TODOS LOS CURSOS REGISTRADOS
-     * 
-     * @return Lista completa de cursos
      */
     public List<Curso> listar() {
         List<Curso> lista = new ArrayList<>();
@@ -122,9 +106,6 @@ public class CursoDAO {
 
     /**
      * OBTENER CURSO POR ID
-     * 
-     * @param id Identificador unico del curso
-     * @return Objeto Curso con datos completos o null si no existe
      */
     public Curso obtenerPorId(int id) {
         Curso c = null;
@@ -154,9 +135,6 @@ public class CursoDAO {
 
     /**
      * AGREGAR NUEVO CURSO
-     * 
-     * @param c Objeto Curso con datos del nuevo curso
-     * @return true si la creacion fue exitosa
      */
     public boolean agregar(Curso c) {
         String sql = "{CALL crear_curso(?, ?, ?, ?)}";
@@ -178,9 +156,6 @@ public class CursoDAO {
 
     /**
      * ACTUALIZAR DATOS DE CURSO EXISTENTE
-     * 
-     * @param c Objeto Curso con datos actualizados
-     * @return true si la actualizacion fue exitosa
      */
     public boolean actualizar(Curso c) {
         String sql = "{CALL actualizar_curso(?, ?, ?, ?, ?)}";
@@ -203,9 +178,6 @@ public class CursoDAO {
 
     /**
      * ELIMINAR CURSO POR ID
-     * 
-     * @param id Identificador del curso a eliminar
-     * @return true si la eliminacion fue exitosa
      */
     public boolean eliminar(int id) {
         String sql = "{CALL eliminar_curso(?)}";
@@ -222,22 +194,51 @@ public class CursoDAO {
     }
     
     /**
-     * METODO ALTERNATIVO PARA OBTENER CURSOS POR PROFESOR
-     * 
-     * @param profesorId Identificador del profesor
-     * @return Lista de cursos asignados al profesor
+     * VERIFICAR SI UN CURSO ESTÁ ASIGNADO A UN PROFESOR
      */
-    public List<Curso> obtenerCursosPorProfesor(int profesorId) {
-        return listarPorProfesor(profesorId);
+    public boolean isCursoAssignedToProfesor(int cursoId, int profesorId) {
+        String sql = "SELECT COUNT(*) as count FROM cursos WHERE id = ? AND profesor_id = ?";
+        
+        try (Connection con = Conexion.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setInt(1, cursoId);
+            ps.setInt(2, profesorId);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("count") > 0;
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error al verificar asignación curso-profesor: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
     }
-    
+
     /**
-     * METODO ALTERNATIVO PARA OBTENER CURSO POR ID
-     * 
-     * @param cursoId Identificador del curso
-     * @return Objeto Curso con datos completos
+     * VERIFICAR EXISTENCIA DE CURSO
      */
-    public Curso obtenerCursoPorId(int cursoId) {
-        return obtenerPorId(cursoId);
+    public boolean existeCurso(int cursoId) {
+        String sql = "SELECT COUNT(*) as count FROM cursos WHERE id = ?";
+        
+        try (Connection con = Conexion.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setInt(1, cursoId);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("count") > 0;
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error al verificar existencia de curso: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
     }
 }

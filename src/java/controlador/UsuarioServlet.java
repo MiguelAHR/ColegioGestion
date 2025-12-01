@@ -1,10 +1,3 @@
-/*
- * SERVLET PARA GESTION DE USUARIOS DEL SISTEMA
- * 
- * Funcionalidades: CRUD completo de usuarios, asignacion de roles, gestion de contraseñas
- * Roles: Administrador
- * Integracion: Relacion con todos los modulos del sistema
- */
 package controlador;
 
 import javax.servlet.ServletException;
@@ -13,22 +6,12 @@ import javax.servlet.http.*;
 import java.io.IOException;
 import modelo.Usuario;
 import modelo.UsuarioDAO;
-import util.ValidacionContraseña;
 
 @WebServlet("/UsuarioServlet")
 public class UsuarioServlet extends HttpServlet {
 
     private UsuarioDAO dao = new UsuarioDAO();
 
-    /**
-     * METODO GET - CONSULTAS Y NAVEGACION DE USUARIOS
-     * 
-     * Acciones soportadas:
-     * - listar: Mostrar todos los usuarios (accion por defecto)
-     * - nuevo: Formulario para crear nuevo usuario
-     * - editar: Formulario para modificar usuario existente
-     * - eliminar: Eliminar usuario del sistema
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -36,6 +19,13 @@ public class UsuarioServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("usuario") == null) {
             response.sendRedirect("index.jsp");
+            return;
+        }
+
+        // VALIDACIÓN CRÍTICA: Solo admin puede gestionar usuarios
+        String rol = (String) session.getAttribute("rol");
+        if (!"admin".equals(rol)) {
+            response.sendRedirect("acceso_denegado.jsp");
             return;
         }
 
@@ -88,12 +78,6 @@ public class UsuarioServlet extends HttpServlet {
         }
     }
 
-    /**
-     * METODO POST - CREAR Y ACTUALIZAR USUARIOS
-     * 
-     * Maneja el envio de formularios para crear nuevos usuarios
-     * y actualizar usuarios existentes con validacion de datos
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -101,6 +85,13 @@ public class UsuarioServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("usuario") == null) {
             response.sendRedirect("index.jsp");
+            return;
+        }
+
+        // VALIDACIÓN CRÍTICA: Solo admin puede gestionar usuarios
+        String rol = (String) session.getAttribute("rol");
+        if (!"admin".equals(rol)) {
+            response.sendRedirect("acceso_denegado.jsp");
             return;
         }
 
@@ -113,11 +104,11 @@ public class UsuarioServlet extends HttpServlet {
         String idParam = request.getParameter("id");
         String username = request.getParameter("username");
         String hashedPasswordFromFrontend = request.getParameter("password");
-        String rol = request.getParameter("rol");
+        String rolUsuario = request.getParameter("rol");
 
-        System.out.println("Datos recibidos - ID: " + idParam + ", Username: " + username + ", Rol: " + rol);
+        System.out.println("Datos recibidos - ID: " + idParam + ", Username: " + username + ", Rol: " + rolUsuario);
 
-        if (username == null || username.trim().isEmpty() || rol == null || rol.trim().isEmpty()) {
+        if (username == null || username.trim().isEmpty() || rolUsuario == null || rolUsuario.trim().isEmpty()) {
             session.setAttribute("error", "Nombre de usuario y rol son obligatorios");
             response.sendRedirect("UsuarioServlet");
             return;
@@ -137,7 +128,7 @@ public class UsuarioServlet extends HttpServlet {
         Usuario u = new Usuario();
         u.setId(id);
         u.setUsername(username.trim());
-        u.setRol(rol.trim());
+        u.setRol(rolUsuario.trim());
 
         try {
             if (id == 0) {

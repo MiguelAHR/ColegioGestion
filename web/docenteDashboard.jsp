@@ -286,11 +286,6 @@
                             </a>
                         </div>
                         <div class="col-md-4">
-                            <a href="AsistenciaServlet?accion=reportes" class="btn btn-info-dashboard">
-                                <i class="bi bi-graph-up"></i> Ver Reportes
-                            </a>
-                        </div>
-                        <div class="col-md-4">
                             <a href="JustificacionServlet?accion=pending" class="btn btn-warning-dashboard">
                                 <i class="bi bi-clock-history"></i> Justificaciones Pendientes
                             </a>

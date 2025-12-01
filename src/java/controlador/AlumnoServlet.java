@@ -1,10 +1,3 @@
-/*
- * SERVLET PARA GESTION COMPLETA DE ESTUDIANTES/ALUMNOS
- * 
- * Funcionalidades: CRUD completo, filtrado por grado, integracion con cursos
- * Roles: Administrador (gestion), Docente (consulta), Padre (consulta limitada)
- * Integracion: Relacion con grados, cursos, asistencias y calificaciones
- */
 package controlador;
 
 import javax.servlet.ServletException;
@@ -37,27 +30,45 @@ public class AlumnoServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
         String accion = request.getParameter("accion");
+
+        System.out.println("AlumnoServlet - Acción: " + accion + ", Rol: " + rol);
+
+        // VALIDACIÓN DE PERMISOS POR ROL
+        if (!tienePermiso(rol, accion, request)) {
+            System.out.println("ACCESO DENEGADO: Rol " + rol + " intentó acceder a AlumnoServlet con acción: " + accion);
+            response.sendRedirect("acceso_denegado.jsp");
+            return;
+        }
 
         // Accion por defecto: listar todos los alumnos con filtros de grado
         if (accion == null) {
+            // Solo admin puede listar todos los alumnos
+            if (!"admin".equals(rol)) {
+                response.sendRedirect("acceso_denegado.jsp");
+                return;
+            }
             request.setAttribute("grados", new GradoDAO().listar());
             request.setAttribute("lista", dao.listar());
             request.getRequestDispatcher("alumnos.jsp").forward(request, response);
             return;
         }
 
-        // Filtrar alumnos por grado especifico
+        // Filtrar alumnos por grado especifico (SOLO ADMIN)
         if (accion.equals("filtrar")) {
-            String gradoStr = request.getParameter("grado_id");
+            if (!"admin".equals(rol)) {
+                response.sendRedirect("acceso_denegado.jsp");
+                return;
+            }
 
+            String gradoStr = request.getParameter("grado_id");
             request.setAttribute("grados", new GradoDAO().listar());
 
             if (gradoStr == null || gradoStr.isEmpty()) {
-                // Sin filtro: mostrar todos los alumnos
                 request.setAttribute("lista", dao.listar());
             } else {
-                // Con filtro: mostrar alumnos del grado seleccionado
                 int gradoId = Integer.parseInt(gradoStr);
                 request.setAttribute("gradoSeleccionado", gradoId);
                 request.setAttribute("lista", dao.listarPorGrado(gradoId));
@@ -68,8 +79,15 @@ public class AlumnoServlet extends HttpServlet {
         }
 
         // Endpoint AJAX: obtener alumnos por curso (para registro de asistencias/notas)
+        // PERMITIDO para docente y admin
         if (accion.equals("obtenerPorCurso")) {
             obtenerAlumnosPorCurso(request, response);
+            return;
+        }
+
+        // Las siguientes acciones SOLO para ADMIN
+        if (!"admin".equals(rol)) {
+            response.sendRedirect("acceso_denegado.jsp");
             return;
         }
 
@@ -80,7 +98,7 @@ public class AlumnoServlet extends HttpServlet {
             return;
         }
 
-        // Procesar acciones restantes
+        // Procesar acciones restantes (SOLO ADMIN)
         switch (accion) {
             case "editar":
                 // Cargar formulario de edicion de alumno
@@ -94,7 +112,12 @@ public class AlumnoServlet extends HttpServlet {
             case "eliminar":
                 // Eliminar alumno del sistema
                 int idEliminar = Integer.parseInt(request.getParameter("id"));
-                dao.eliminar(idEliminar);
+                boolean eliminado = dao.eliminar(idEliminar);
+                if (eliminado) {
+                    session.setAttribute("mensaje", "Alumno eliminado correctamente");
+                } else {
+                    session.setAttribute("error", "Error al eliminar el alumno");
+                }
                 response.sendRedirect("AlumnoServlet");
                 break;
 
@@ -114,6 +137,16 @@ public class AlumnoServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
+
+        // VALIDACIÓN: Solo admin puede crear/actualizar alumnos
+        if (!"admin".equals(rol)) {
+            System.out.println("ACCESO DENEGADO POST: Rol " + rol + " intentó modificar alumnos");
+            response.sendRedirect("acceso_denegado.jsp");
+            return;
+        }
+
         // Determinar si es creacion (id=0) o actualizacion (id>0)
         int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
                 ? Integer.parseInt(request.getParameter("id")) : 0;
@@ -126,18 +159,61 @@ public class AlumnoServlet extends HttpServlet {
         a.setFechaNacimiento(request.getParameter("fecha_nacimiento"));
         a.setGradoId(Integer.parseInt(request.getParameter("grado_id")));
 
+        // Validar datos obligatorios
+        if (a.getNombres() == null || a.getNombres().trim().isEmpty() ||
+            a.getApellidos() == null || a.getApellidos().trim().isEmpty()) {
+            session.setAttribute("error", "Nombre y apellidos son obligatorios");
+            response.sendRedirect("AlumnoServlet?accion=" + (id == 0 ? "nuevo" : "editar&id=" + id));
+            return;
+        }
+
         // Ejecutar operacion en base de datos
+        boolean resultado;
         if (id == 0) {
-            dao.agregar(a);
-            System.out.println("Nuevo alumno creado: " + a.getNombres() + " " + a.getApellidos());
+            resultado = dao.agregar(a);
+            if (resultado) {
+                System.out.println("Nuevo alumno creado por admin: " + a.getNombres() + " " + a.getApellidos());
+                session.setAttribute("mensaje", "Alumno creado correctamente");
+            } else {
+                session.setAttribute("error", "Error al crear el alumno");
+            }
         } else {
             a.setId(id);
-            dao.actualizar(a);
-            System.out.println("Alumno actualizado: " + a.getNombres() + " " + a.getApellidos() + " (ID: " + id + ")");
+            resultado = dao.actualizar(a);
+            if (resultado) {
+                System.out.println("Alumno actualizado por admin: " + a.getNombres() + " " + a.getApellidos() + " (ID: " + id + ")");
+                session.setAttribute("mensaje", "Alumno actualizado correctamente");
+            } else {
+                session.setAttribute("error", "Error al actualizar el alumno");
+            }
         }
 
         // Redirigir a la lista principal de alumnos
         response.sendRedirect("AlumnoServlet");
+    }
+
+    /**
+     * VALIDAR PERMISOS SEGUN ROL Y ACCION
+     */
+    private boolean tienePermiso(String rol, String accion, HttpServletRequest request) {
+        if (rol == null) return false;
+
+        switch (rol) {
+            case "admin":
+                // Admin tiene acceso completo
+                return true;
+
+            case "docente":
+                // Docente solo puede usar obtenerPorCurso (AJAX)
+                return "obtenerPorCurso".equals(accion);
+
+            case "padre":
+                // Padre NO tiene acceso a AlumnoServlet
+                return false;
+
+            default:
+                return false;
+        }
     }
 
     /**
@@ -163,7 +239,6 @@ public class AlumnoServlet extends HttpServlet {
             // Capturar y validar parametro curso_id
             String cursoIdParam = request.getParameter("curso_id");
             System.out.println("Parametro curso_id recibido: '" + cursoIdParam + "'");
-            System.out.println("Todos los parametros: " + request.getParameterMap().toString());
 
             // Validar parametro obligatorio
             if (cursoIdParam == null || cursoIdParam.isEmpty()) {
@@ -181,20 +256,13 @@ public class AlumnoServlet extends HttpServlet {
 
             System.out.println("Alumnos encontrados: " + alumnos.size());
 
-            // Log detallado de alumnos encontrados
-            for (Alumno alumno : alumnos) {
-                System.out.println("Alumno: " + alumno.getId() + " - " + alumno.getNombres() + " " + alumno.getApellidos());
-            }
-
             // Convertir resultados a JSON y enviar respuesta
             String json = convertirAlumnosAJson(alumnos);
-            System.out.println("JSON a enviar: " + json);
+            System.out.println("JSON enviado para curso " + cursoId + ": " + alumnos.size() + " alumnos");
 
             PrintWriter out = response.getWriter();
             out.print(json);
             out.flush();
-
-            System.out.println("FIN DEBUG - Respuesta enviada");
 
         } catch (NumberFormatException e) {
             // Error en formato de parametro
@@ -203,7 +271,7 @@ public class AlumnoServlet extends HttpServlet {
             response.getWriter().print("{\"error\": \"ID de curso invalido: debe ser un numero\"}");
         } catch (Exception e) {
             // Error general en el procesamiento
-            System.out.println("ERROR inesperado:");
+            System.out.println("ERROR inesperado en obtenerAlumnosPorCurso:");
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().print("{\"error\": \"Error interno del servidor: " + e.getMessage() + "\"}");

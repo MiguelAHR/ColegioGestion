@@ -1,9 +1,3 @@
-/*
- * SERVLET PARA GESTION COMPLETA DE CURSOS ACADEMICOS
- * 
- * Funcionalidades: CRUD completo de cursos, asignacion de profesores, filtros por grado
- * Roles: Administrador
- */
 package controlador;
 
 import javax.servlet.ServletException;
@@ -14,71 +8,86 @@ import modelo.Curso;
 import modelo.CursoDAO;
 import modelo.GradoDAO;
 import modelo.ProfesorDAO;
+import modelo.Profesor;
 
 @WebServlet("/CursoServlet")
 public class CursoServlet extends HttpServlet {
 
-    // DAO para operaciones con la tabla de cursos
     CursoDAO dao = new CursoDAO();
 
-    /**
-     * METODO GET - CONSULTAS Y NAVEGACION
-     * 
-     * Acciones soportadas:
-     * - listar: Muestra todos los cursos
-     * - filtrar: Filtra por grado especifico
-     * - nuevo: Formulario de creacion
-     * - editar: Formulario de edicion
-     * - eliminar: Elimina curso
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
         String accion = request.getParameter("accion");
+
+        // VALIDACIÓN: Solo admin puede gestionar cursos (crear, editar, eliminar)
+        if (("nuevo".equals(accion) || "editar".equals(accion) || "eliminar".equals(accion)) && !"admin".equals(rol)) {
+            response.sendRedirect("acceso_denegado.jsp");
+            return;
+        }
+
+        // Para docentes que quieren ver cursos, validar ownership
+        if ("docente".equals(rol) && ("editar".equals(accion) || "eliminar".equals(accion))) {
+            Profesor docente = (Profesor) session.getAttribute("docente");
+            if (docente != null) {
+                try {
+                    int cursoId = Integer.parseInt(request.getParameter("id"));
+                    if (!isCursoAssignedToProfesor(cursoId, docente.getId())) {
+                        session.setAttribute("error", "No tienes permisos para acceder a este curso.");
+                        response.sendRedirect("acceso_denegado.jsp");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    session.setAttribute("error", "ID de curso inválido.");
+                    response.sendRedirect("cursos.jsp");
+                    return;
+                }
+            }
+        }
+
         System.out.println("Accion recibida: " + accion);
 
-        // Accion por defecto: listar todos los cursos
         if (accion == null || accion.equals("listar")) {
-            // Cargar datos necesarios para la vista
-            request.setAttribute("grados", new GradoDAO().listar()); // Para filtros
-            request.setAttribute("lista", dao.listar()); // Lista de cursos
+            request.setAttribute("grados", new GradoDAO().listar());
+            request.setAttribute("lista", dao.listar());
             request.getRequestDispatcher("cursos.jsp").forward(request, response);
             return;
         }
 
-        // Filtrar cursos por grado especifico
         if (accion.equals("filtrar")) {
             String gradoStr = request.getParameter("grado_id");
+            request.setAttribute("grados", new GradoDAO().listar());
 
             if (gradoStr == null || gradoStr.isEmpty()) {
-                // Sin filtro: mostrar todos los cursos
                 request.setAttribute("lista", dao.listar());
             } else {
-                // Con filtro: mostrar cursos del grado seleccionado
                 int gradoId = Integer.parseInt(gradoStr);
                 request.setAttribute("lista", dao.listarPorGrado(gradoId));
-                request.setAttribute("gradoSeleccionado", gradoId); // Mantener seleccion
+                request.setAttribute("gradoSeleccionado", gradoId);
             }
 
-            request.setAttribute("grados", new GradoDAO().listar());
             request.getRequestDispatcher("cursos.jsp").forward(request, response);
             return;
         }
 
-        // Mostrar formulario para nuevo curso
         if (accion.equals("nuevo")) {
-            // Cargar listas desplegables para formulario
             request.setAttribute("grados", new GradoDAO().listar());
             request.setAttribute("profesores", new ProfesorDAO().listar());
             request.getRequestDispatcher("cursoForm.jsp").forward(request, response);
             return;
         }
 
-        // Mostrar formulario para editar curso existente
         if (accion.equals("editar")) {
             int idEditar = Integer.parseInt(request.getParameter("id"));
-            Curso c = dao.obtenerPorId(idEditar); // Obtener curso de BD
+            Curso c = dao.obtenerPorId(idEditar);
+            if (c == null) {
+                session.setAttribute("error", "Curso no encontrado.");
+                response.sendRedirect("CursoServlet");
+                return;
+            }
             request.setAttribute("cursos", c);
             request.setAttribute("grados", new GradoDAO().listar());
             request.setAttribute("profesores", new ProfesorDAO().listar());
@@ -86,13 +95,11 @@ public class CursoServlet extends HttpServlet {
             return;
         }
 
-        // Eliminar curso con confirmacion
         if (accion.equals("eliminar")) {
             int idEliminar = Integer.parseInt(request.getParameter("id"));
             boolean resultado = dao.eliminar(idEliminar);
             
-            // Mostrar mensaje de resultado
-            request.getSession().setAttribute("mensajeCurso", resultado
+            session.setAttribute("mensajeCurso", resultado
                     ? "Curso eliminado correctamente"
                     : "Error al eliminar el curso");
             response.sendRedirect("CursoServlet?accion=listar");
@@ -100,19 +107,19 @@ public class CursoServlet extends HttpServlet {
         }
     }
 
-    /**
-     * METODO POST - PROCESAMIENTO DE FORMULARIOS
-     * 
-     * Funcionalidades:
-     * - Crear nuevos cursos
-     * - Actualizar cursos existentes
-     * - Validar integridad de datos
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Determinar si es creacion o edicion (ID = 0 -> NUEVO)
+        HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
+        
+        // Solo admin puede crear/editar cursos
+        if (!"admin".equals(rol)) {
+            response.sendRedirect("acceso_denegado.jsp");
+            return;
+        }
+
         int id = request.getParameter("id") != null && !request.getParameter("id").isEmpty()
                 ? Integer.parseInt(request.getParameter("id")) : 0;
 
@@ -120,7 +127,6 @@ public class CursoServlet extends HttpServlet {
         c.setNombre(request.getParameter("nombre"));
 
         try {
-            // Validar datos obligatorios: grado y profesor
             String gradoStr = request.getParameter("grado_id");
             String profesorStr = request.getParameter("profesor_id");
 
@@ -133,34 +139,53 @@ public class CursoServlet extends HttpServlet {
 
         } catch (Exception e) {
             System.out.println("ERROR: grado_id o profesor_id invalidos");
-            e.printStackTrace();
-            request.getSession().setAttribute("mensajeCurso", "Error: Debes seleccionar grado y profesor.");
+            session.setAttribute("error", "Error: Debes seleccionar grado y profesor.");
             response.sendRedirect("CursoServlet?accion=nuevo");
             return;
         }
 
-        // Manejar creditos (campo opcional)
         try {
             c.setCreditos(Integer.parseInt(request.getParameter("creditos")));
         } catch (NumberFormatException e) {
-            c.setCreditos(0); // Valor por defecto en caso de error
+            c.setCreditos(0);
         }
 
-        // Ejecutar operacion en base de datos
         boolean resultado;
         if (id == 0) {
-            resultado = dao.agregar(c); // Crear nuevo registro
+            resultado = dao.agregar(c);
         } else {
             c.setId(id);
-            resultado = dao.actualizar(c); // Actualizar registro existente
+            resultado = dao.actualizar(c);
         }
 
-        // Configurar mensaje de retroalimentacion
-        request.getSession().setAttribute("mensajeCurso", resultado
+        session.setAttribute("mensajeCurso", resultado
                 ? "Curso guardado correctamente"
                 : "Error al guardar el curso");
 
-        // Redirigir a la lista principal
         response.sendRedirect("CursoServlet?accion=listar");
+    }
+
+    /**
+     * METODO AUXILIAR PARA VERIFICAR ASIGNACIÓN CURSO-PROFESOR
+     */
+    private boolean isCursoAssignedToProfesor(int cursoId, int profesorId) {
+        String sql = "SELECT COUNT(*) as count FROM cursos WHERE id = ? AND profesor_id = ?";
+        
+        try (java.sql.Connection con = conexion.Conexion.getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setInt(1, cursoId);
+            ps.setInt(2, profesorId);
+            java.sql.ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("count") > 0;
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error al verificar asignación curso-profesor: " + e.getMessage());
+        }
+        
+        return false;
     }
 }

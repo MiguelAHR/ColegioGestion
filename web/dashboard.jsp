@@ -278,14 +278,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 text-center text-md-end">
-                        <a href="reportes.jsp" class="btn btn-light btn-dashboard me-2 mb-2">
-                            <i class="bi bi-graph-up me-1"></i>Ver Reportes
-                        </a>
-                        <a href="configuracion.jsp" class="btn btn-warning-dashboard mb-2">
-                            <i class="bi bi-gear me-1"></i>Configuración
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -357,18 +349,6 @@
                 </div>
             </div>
 
-            <!-- Reportes y Estadísticas -->
-            <div class="col-md-4">
-                <div class="dashboard-card">
-                    <h5 class="fw-bold mb-3">
-                        <i class="fas fa-chart-bar icon-info me-2"></i>Reportes y Estadísticas
-                    </h5>
-                    <p>Genera reportes detallados y visualiza estadísticas del sistema educativo.</p>
-                    <a href="ReportesServlet" class="btn btn-info-dashboard">
-                        <i class="bi bi-arrow-right me-1"></i>Ver Reportes
-                    </a>
-                </div>
-            </div>
 
         </div>
     </div>

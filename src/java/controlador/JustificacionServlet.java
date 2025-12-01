@@ -1,10 +1,3 @@
-/*
- * SERVLET PARA GESTION DE JUSTIFICACIONES DE AUSENCIAS
- * 
- * Funcionalidades: Crear justificaciones, aprobar/rechazar (admin/docente), consulta padres
- * Roles: Padre (crear), Admin/Docente (aprobar/rechazar), Padre (consulta)
- * Integracion: Relacion con asistencias, alumnos y padres
- */
 package controlador;
 
 import java.io.IOException;
@@ -33,12 +26,25 @@ public class JustificacionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
         String accion = request.getParameter("accion");
+        
         if (accion == null) {
             accion = "list"; // Accion por defecto: listar
         }
 
+        System.out.println("JustificacionServlet - Acción: " + accion + ", Rol: " + rol);
+
         try {
+            // VALIDACIÓN DE PERMISOS POR ROL
+            if (!validarAccesoRol(rol, accion)) {
+                System.out.println("ACCESO DENEGADO: Rol " + rol + " intentó acceder con acción: " + accion);
+                response.sendRedirect("acceso_denegado.jsp");
+                return;
+            }
+
             switch (accion) {
                 case "form":
                     mostrarFormJustificacion(request, response);
@@ -54,8 +60,8 @@ public class JustificacionServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            HttpSession session = request.getSession();
-            session.setAttribute("error", "Error interno del sistema: " + e.getMessage());
+            HttpSession currentSession = request.getSession();
+            currentSession.setAttribute("error", "Error interno del sistema: " + e.getMessage());
             response.sendRedirect("error.jsp");
         }
     }
@@ -71,9 +77,22 @@ public class JustificacionServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
         String accion = request.getParameter("accion");
+        
         if (accion == null) {
             accion = "crear"; // Accion por defecto: crear
+        }
+
+        System.out.println("JustificacionServlet POST - Acción: " + accion + ", Rol: " + rol);
+
+        // VALIDACIÓN DE PERMISOS POR ROL
+        if (!validarAccesoRol(rol, accion)) {
+            System.out.println("ACCESO DENEGADO POST: Rol " + rol + " intentó acceder con acción: " + accion);
+            response.sendRedirect("acceso_denegado.jsp");
+            return;
         }
 
         try {
@@ -92,9 +111,32 @@ public class JustificacionServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            HttpSession session = request.getSession();
             session.setAttribute("error", "Error al procesar la solicitud: " + e.getMessage());
             response.sendRedirect("error.jsp");
+        }
+    }
+
+    /**
+     * VALIDAR ACCESO POR ROL Y ACCIÓN
+     */
+    private boolean validarAccesoRol(String rol, String accion) {
+        if (rol == null) return false;
+
+        switch (rol) {
+            case "admin":
+                // Admin puede realizar todas las acciones
+                return true;
+                
+            case "docente":
+                // Docente solo puede aprobar/rechazar justificaciones pendientes
+                return "pending".equals(accion) || "aprobar".equals(accion) || "rechazar".equals(accion);
+                
+            case "padre":
+                // Padre solo puede crear y listar sus justificaciones
+                return "form".equals(accion) || "crear".equals(accion) || "list".equals(accion);
+                
+            default:
+                return false;
         }
     }
 
@@ -105,6 +147,7 @@ public class JustificacionServlet extends HttpServlet {
      */
     private void mostrarFormJustificacion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
         HttpSession session = request.getSession();
         Padre padre = (Padre) session.getAttribute("padre");
 
@@ -151,6 +194,16 @@ public class JustificacionServlet extends HttpServlet {
      */
     private void listarJustificacionesPendientes(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
+        
+        // Solo admin y docente pueden ver justificaciones pendientes
+        if (!"admin".equals(rol) && !"docente".equals(rol)) {
+            response.sendRedirect("acceso_denegado.jsp");
+            return;
+        }
+        
         JustificacionDAO justificacionDAO = new JustificacionDAO();
         var justificaciones = justificacionDAO.obtenerJustificacionesPendientes();
         request.setAttribute("justificaciones", justificaciones);
@@ -162,15 +215,19 @@ public class JustificacionServlet extends HttpServlet {
      */
     private void listarJustificaciones(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
         HttpSession session = request.getSession();
         Padre padre = (Padre) session.getAttribute("padre");
 
-        if (padre != null) {
-            JustificacionDAO justificacionDAO = new JustificacionDAO();
-            var justificaciones = justificacionDAO.obtenerJustificacionesPorAlumno(padre.getAlumnoId());
-            request.setAttribute("justificaciones", justificaciones);
+        if (padre == null) {
+            response.sendRedirect("index.jsp");
+            return;
         }
 
+        JustificacionDAO justificacionDAO = new JustificacionDAO();
+        var justificaciones = justificacionDAO.obtenerJustificacionesPorAlumno(padre.getAlumnoId());
+        request.setAttribute("justificaciones", justificaciones);
+        
         request.getRequestDispatcher("justificacionesPadre.jsp").forward(request, response);
     }
 
@@ -179,6 +236,7 @@ public class JustificacionServlet extends HttpServlet {
      */
     private void crearJustificacion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
         HttpSession session = request.getSession();
         Padre padre = (Padre) session.getAttribute("padre");
 
@@ -193,12 +251,34 @@ public class JustificacionServlet extends HttpServlet {
             String tipoJustificacion = request.getParameter("tipo_justificacion");
             String descripcion = request.getParameter("descripcion");
 
-            System.out.println("Creando justificacion:");
-            System.out.println("   Asistencia ID: " + asistenciaId);
-            System.out.println("   Tipo: " + tipoJustificacion);
-            System.out.println("   Descripcion: " + descripcion);
-            System.out.println("   Justificado por: " + padre.getId());
-            System.out.println("   Padre username: " + padre.getUsername());
+            System.out.println("Creando justificación para padre: " + padre.getUsername()
+                    + " (alumno_id: " + padre.getAlumnoId() + ")");
+
+            // VALIDACIÓN CRÍTICA: Verificar que la asistencia pertenece al hijo del padre
+            AsistenciaDAO asistenciaDAO = new AsistenciaDAO();
+            // Como no existe obtenerPorId, obtenemos todas las asistencias del alumno
+            List<Asistencia> asistenciasAlumno = asistenciaDAO.obtenerAsistenciasPorAlumnoTurno(
+                padre.getAlumnoId(), 1, 
+                java.time.LocalDate.now().getMonthValue(),
+                java.time.LocalDate.now().getYear()
+            );
+            
+            boolean asistenciaValida = false;
+            for (Asistencia asistencia : asistenciasAlumno) {
+                if (asistencia.getId() == asistenciaId) {
+                    asistenciaValida = true;
+                    break;
+                }
+            }
+            
+            if (!asistenciaValida) {
+                System.out.println("INTENTO DE ACCESO NO AUTORIZADO: Padre ID " + padre.getId() + 
+                                 " intentó justificar asistencia ID " + asistenciaId + 
+                                 " que no pertenece a su hijo ID " + padre.getAlumnoId());
+                session.setAttribute("error", "No tienes permisos para justificar esta ausencia.");
+                response.sendRedirect("acceso_denegado.jsp");
+                return;
+            }
 
             Justificacion justificacion = new Justificacion();
             justificacion.setAsistenciaId(asistenciaId);
@@ -210,20 +290,20 @@ public class JustificacionServlet extends HttpServlet {
             boolean exito = justificacionDAO.crearJustificacion(justificacion);
 
             if (exito) {
-                System.out.println("Justificacion creada exitosamente");
-                session.setAttribute("mensaje", "Justificacion enviada correctamente");
-                response.sendRedirect("AsistenciaServlet?accion=verPadre");
+                System.out.println("Justificación creada exitosamente por padre: " + padre.getUsername());
+                session.setAttribute("mensaje", "Justificación enviada correctamente");
+                response.sendRedirect("JustificacionServlet?accion=list");
             } else {
-                System.out.println("Error al crear justificacion");
-                session.setAttribute("error", "Error al enviar la justificacion");
+                System.out.println("Error al crear justificación");
+                session.setAttribute("error", "Error al enviar la justificación");
                 response.sendRedirect("JustificacionServlet?accion=form");
             }
         } catch (NumberFormatException e) {
-            session.setAttribute("error", "Datos invalidos. Por favor verifique la informacion.");
+            session.setAttribute("error", "Datos inválidos. Por favor verifique la información.");
             response.sendRedirect("JustificacionServlet?accion=form");
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Error interno al procesar la justificacion: " + e.getMessage());
+            session.setAttribute("error", "Error interno al procesar la justificación: " + e.getMessage());
             response.sendRedirect("JustificacionServlet?accion=form");
         }
     }
@@ -233,7 +313,16 @@ public class JustificacionServlet extends HttpServlet {
      */
     private void aprobarJustificacion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
         HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
+        
+        // Solo admin y docente pueden aprobar justificaciones
+        if (!"admin".equals(rol) && !"docente".equals(rol)) {
+            response.sendRedirect("acceso_denegado.jsp");
+            return;
+        }
+        
         try {
             int justificacionId = Integer.parseInt(request.getParameter("id"));
             String observaciones = request.getParameter("observaciones");
@@ -259,7 +348,16 @@ public class JustificacionServlet extends HttpServlet {
      */
     private void rechazarJustificacion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
         HttpSession session = request.getSession();
+        String rol = (String) session.getAttribute("rol");
+        
+        // Solo admin y docente pueden rechazar justificaciones
+        if (!"admin".equals(rol) && !"docente".equals(rol)) {
+            response.sendRedirect("acceso_denegado.jsp");
+            return;
+        }
+        
         try {
             int justificacionId = Integer.parseInt(request.getParameter("id"));
             String observaciones = request.getParameter("observaciones");
